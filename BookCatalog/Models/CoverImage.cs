@@ -6,7 +6,7 @@ namespace BookCatalog.Models
 {
     public class CoverImage
     {
-        public int Id { get; set; }
-        public byte[] CoverData { get; set; }
+        public int id { get; set; }
+        public byte[] cover_data { get; set; }
     }
 }

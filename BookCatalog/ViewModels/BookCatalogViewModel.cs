@@ -19,6 +19,20 @@ namespace BookCatalog.ViewModels
 {
     public class BookCatalogViewModel : INotifyPropertyChanged
     {
+        private BookView _selectedBook;
+        public BookView SelectedBook
+        {
+            get { return _selectedBook; }
+            set
+            {
+                if (_selectedBook != value)
+                {
+                    _selectedBook = value;
+                    OnPropertyChanged(nameof(SelectedBook));
+                }
+            }
+        }
+
         public ICommand OpenCardBookCommand { get; }
         public ICommand AddBookCommand { get; }
         public ICommand PreviousPageCommand { get; }
@@ -28,8 +42,8 @@ namespace BookCatalog.ViewModels
         {
             get { return _openWindowCommand; }
         }
-        public List<Book> BooksList { get; private set; }
-        
+        public ObservableCollection<BookView> BooksList { get; private set; }
+
         public BookCatalogViewModel()
         {
             OpenCardBookCommand = new RelayCommand(o => OpenCardBooks());
@@ -39,29 +53,32 @@ namespace BookCatalog.ViewModels
             LoadBooks();
         }
 
+
         void LoadBooks()
         {
-            BooksList = DataService.GetFullTable<Book>();
+            using (var dbContext = new MyDbContext())
+            {
+                var books = DataService.GetFullTable<Book>();
+
+                var bookViewModels = books.Select(b => new BookView
+                {
+                    Id = b.id,
+                    Title = b.title,
+                    AuthorName = DataService.GetAuthorName(b.author_id),
+                    YearOfManufacture = b.year_of_manufacture,
+                    ISBN = b.isbn,
+                    GenreName = DataService.GetGenreName(b.author_id),
+                }).ToList();
+
+                BooksList = new ObservableCollection<BookView>(bookViewModels);
+            }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        public string Title { get; set; }
-        private int _authorId { get; set; }
-        public int Author
-        {
-            get => _authorId;
-            set => 
-                _authorId = value;
-        }
-
-        public DateTime YearOfManufacture { get; set; }
-        public string ISBN { get; set; }
-        public int GenreId { get; set; }
 
         void NextPage()
         {
@@ -75,10 +92,13 @@ namespace BookCatalog.ViewModels
 
         void OpenCardBooks()
         {
-            var viewModel = new EditBookViewModel(); // Замените на вашу ViewModel для второго окна
-            var window = new EditBookWindow(); // Замените на ваше окно WPF
-            window.DataContext = viewModel;
-            window.ShowDialog();
+            if (SelectedBook != null)
+            {
+                var viewModel = new EditBookViewModel(SelectedBook); 
+                var window = new EditBookWindow(); 
+                window.DataContext = viewModel;
+                window.ShowDialog();
+            }
         }
 
         void AddBook()
@@ -87,3 +107,7 @@ namespace BookCatalog.ViewModels
         }
     }
 }
+
+
+
+

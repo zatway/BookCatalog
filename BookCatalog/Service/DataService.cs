@@ -25,9 +25,19 @@ namespace BookCatalog.Service
         {
             using (var dbContext = new MyDbContext())
             {
-                Author author = dbContext.Authors.FirstOrDefault(a => a.Id == authorId);
+                Author author = dbContext.Authors.FirstOrDefault(a => a.id == authorId);
                 if (author != null)
-                    return author.FullName;
+                    return author.full_name;
+                return null;
+            }
+        }
+        public static string GetGenreName(int genreId)
+        {
+            using (var dbContext = new MyDbContext())
+            {
+                Genre genre = dbContext.Genres.FirstOrDefault(a => a.id == genreId);
+                if (genre != null)
+                    return genre.name;
                 return null;
             }
         }
@@ -36,19 +46,27 @@ namespace BookCatalog.Service
         {
             using (var dbContext = new MyDbContext())
             {
-                CoverImage cover = dbContext.CoverImages.FirstOrDefault(c => c.Id == coverId);
-                if (cover.CoverData == null || cover.CoverData.Length == 0)
+                CoverImage cover = dbContext.CoverImages.FirstOrDefault(c => c.id == coverId);
+                if (cover.cover_data == null || cover.cover_data.Length == 0)
                     return null;
-                using (var stream = new MemoryStream(cover.CoverData))
+                try
                 {
-                    var image = new BitmapImage();
-                    image.BeginInit();
-                    image.CacheOption = BitmapCacheOption.OnLoad;
-                    image.StreamSource = stream;
-                    image.EndInit();
-                    image.Freeze();
-                    return image;
+                    using (var stream = new MemoryStream(cover.cover_data))
+                    {
+                        var image = new BitmapImage();
+                        image.BeginInit();
+                        image.CacheOption = BitmapCacheOption.OnLoad;
+                        image.StreamSource = stream;
+                        image.EndInit();
+                        image.Freeze();
+                        return image;
+                    }
                 }
+                catch
+                {
+                    return null;
+                }
+                
             }
         }
 

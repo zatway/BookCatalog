@@ -8,6 +8,11 @@
         xmlns:local="clr-namespace:BookCatalog"
         mc:Ignorable="d"
         Title="BookCatalogWindow" Height="700" Width="1000">
+
+    <Window.DataContext>
+        <vm:BookCatalogViewModel/>
+    </Window.DataContext>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="20"/>
@@ -26,23 +31,27 @@
             <Button Command="{Binding OpenCardBookCommand}" Content="Открыть карточку" Foreground="#f3f3f3" Background="#41a479" Width="113"/>
             <Button Content="Добавить книгу" Command="{Binding AddBookCommand}" Foreground="#f3f3f3" Background="#41a479" Width="110"/>
         </StackPanel>
-        <Grid  Grid.Row="2" Grid.Column="1">
+        <Grid Grid.Row="2" Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="113*"/>
                 <ColumnDefinition Width="79*"/>
             </Grid.ColumnDefinitions>
-            <DataGrid ItemsSource="{Binding vm:BooksList}" Grid.ColumnSpan="2">
-                <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Id}" Width="100"/>
-                <DataGr
-                        <GridViewColumn Header="Название" DisplayMemberBinding="{Binding Title}" Width="310"/>
-                        <GridViewColumn Header="Автор" DisplayMemberBinding="{Binding Author}" Width="250"/>
-                        <GridViewColumn Header="ISBN" DisplayMemberBinding="{Binding ISBN}" Width="150"/>
-                        <GridViewColumn Header="Жанр" DisplayMemberBinding="{Binding Genre}" Width="150"/>
-                    </GridView>
-                </ListView.View>
+            <DataGrid ItemsSource="{Binding BooksList}" 
+          Grid.ColumnSpan="2" 
+          Height="614" 
+          VerticalAlignment="Top" 
+          AutoGenerateColumns="False" 
+          SelectedItem="{Binding SelectedBook}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="310"/>
+                    <DataGridTextColumn Header="Автор" Binding="{Binding AuthorName}" Width="250"/>
+                    <DataGridTextColumn Header="ISBN" Binding="{Binding ISBN}" Width="150"/>
+                    <DataGridTextColumn Header="Дата публикации" Binding="{Binding YearOfManufacture, StringFormat=\{0:MM.dd.yyyy\}}" Width="150"/>
+                    <DataGridTextColumn Header="Жанр" Binding="{Binding GenreName}" Width="150"/>
+                </DataGrid.Columns>
             </DataGrid>
-            <Button Content="←" Command="{Binding PreviousPageCommand}"  VerticalAlignment="Bottom" Foreground="#f3f3f3" Background="DarkGreen" Height="30" Width="30" FontSize="20" HorizontalAlignment="Left" Margin="5,0,0,5"/>
-            <Button Content=" →" Command="{Binding NextPageCommand}"  VerticalAlignment="Bottom" Foreground="#f3f3f3" Background="DarkGreen" Height="30" Width="30" FontSize="20" HorizontalAlignment="Right" Margin="0,0,5,5" Grid.Column="1"/>
+            <Button Content="←" Command="{Binding PreviousPageCommand}" VerticalAlignment="Bottom" Foreground="#f3f3f3" Background="DarkGreen" Height="30" Width="30" FontSize="20" HorizontalAlignment="Left" Margin="5,0,0,5"/>
+            <Button Content="→" Command="{Binding NextPageCommand}" VerticalAlignment="Bottom" Foreground="#f3f3f3" Background="DarkGreen" Height="30" Width="30" FontSize="20" HorizontalAlignment="Right" Margin="0,0,5,5" Grid.Column="1"/>
         </Grid>
     </Grid>
 </Window>

@@ -8,7 +8,7 @@ namespace BookCatalog.Models
 {
     public class Author
     {
-        public int Id { get; set; }
-        public string FullName { get; set; }
+        public int id { get; set; }
+        public string full_name { get; set; }
     }
 }

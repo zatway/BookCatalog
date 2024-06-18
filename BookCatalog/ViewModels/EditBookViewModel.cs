@@ -21,26 +21,23 @@ namespace BookCatalog.ViewModels
     {
         private Book _book;
         public string Action;
-        public EditBookViewModel(Book book)
+        public EditBookViewModel(BookView bookView)
         {
-            Action = "Редактировать";
-            _book = book;
             using (var dbContext = new MyDbContext())
             {
+                _book = dbContext.Books.FirstOrDefault(b => b.id == bookView.Id);
                 Authors = new ObservableCollection<Author>(dbContext.Authors.ToList());
                 Genres = new ObservableCollection<Genre>(dbContext.Genres.ToList());
-                Author = Authors.FirstOrDefault(a => a.Id == book.author_id);
-                Genre = Genres.FirstOrDefault(g => g.Id == book.genre_id);
-                Cover = DataService.GetCover(book.coverimage_id);
+                Author = Authors.FirstOrDefault(a => a.id == _book.author_id);
+                Genre = Genres.FirstOrDefault(g => g.id == _book.genre_id);
+                Cover = DataService.GetCover(_book.coverimage_id);
+                if (Cover == null)
+                    SelectFileCommandExecute();
+                Title = _book.title;
+                YearOfManufacture = _book.year_of_manufacture;
+                ISBN = _book.isbn;
             }
-            Title = book.title;
-            YearOfManufacture = book.year_of_manufacture;
-            ISBN = book.isbn;
-        }
-
-        public EditBookViewModel()
-        {
-            Action = "Добавить";
+            LoadAuthors();
         }
 
         private Author _author;
@@ -70,6 +67,11 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
+        private void LoadAuthors()
+{
+    List<Author> authors = DataService.GetFullTable<Author>();
+    Authors = new ObservableCollection<Author>(authors);
+}
         private BitmapImage _cover;
         public BitmapImage Cover
         {
@@ -89,12 +91,31 @@ namespace BookCatalog.ViewModels
             get { return _authors; }
             set
             {
-                if (_authors != value)
-                {
-                    _authors = value;
-                    OnPropertyChanged(nameof(Authors));
-                }
+                _authors = value;
+                OnPropertyChanged(nameof(Authors));
             }
+        }
+
+        private Author _selectedAuthor;
+        public Author SelectedAuthor
+        {
+            get { return _selectedAuthor; }
+            set
+            {
+                _selectedAuthor = value;
+                OnPropertyChanged(nameof(SelectedAuthor));
+            }
+        }
+
+        public List<string> GetAuthorsName()
+        {
+            List<Author> authors = DataService.GetFullTable<Author>();
+            List<string> authorsName = new List<string>();
+            foreach(Author author in authors)
+            {
+                authorsName.Add(DataService.GetAuthorName(author.id));
+            }
+            return authorsName;
         }
 
         private ObservableCollection<Genre> _genres;
@@ -167,42 +188,57 @@ namespace BookCatalog.ViewModels
                 return _saveCommand;
             }
         }
-
-
+        private ICommand _selectFileCommand;
+        public ICommand SelectFileCommand
+        {
+            get
+            {
+                if (_selectFileCommand == null)
+                {
+                    _selectFileCommand = new RelayCommand(param => SelectFileCommandExecute());
+                }
+                return _selectFileCommand;
+            }
+        }
         private void SaveExecute()
         {
             if (!ValidateInputs())
             {
-                MessageBox.Show("Не все данные заполлнены");
+                MessageBox.Show("Не все данные заполнены");
+                return;
             }
 
-            using (var dbContext = new MyDbContext())
+            try
             {
-                _book.title = Title;
-                _book.year_of_manufacture = YearOfManufacture;
-                _book.isbn = ISBN;
-                _book.author_id = Author.Id;
-                _book.genre_id = Genre.Id;
-                dbContext.Entry(_book).State = EntityState.Modified;
-                dbContext.SaveChanges();
+                using (var dbContext = new MyDbContext())
+                {
+                    _book.title = Title;
+                    _book.year_of_manufacture = YearOfManufacture.ToUniversalTime(); 
+                    _book.isbn = ISBN;
+                    _book.author_id = Author.id;
+                    _book.genre_id = Genre.id;
+
+                    dbContext.Entry(_book).State = EntityState.Modified;
+                    dbContext.SaveChanges();
+                }
+
+                MessageBox.Show("Изменения успешно сохранены");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Произошла ошибка при сохранении данных: {ex.Message}");
             }
         }
 
         private bool ValidateInputs()
         {
-            if (string.IsNullOrWhiteSpace(Title))
-                return false;
-            if (YearOfManufacture == default)
-                return false;
-            if (string.IsNullOrWhiteSpace(ISBN))
-                return false;
-            if (Author == null)
-                return false;
-            if (Genre == null)
-                return false;
-
-            return true;
+            return !string.IsNullOrWhiteSpace(Title) &&
+                   YearOfManufacture != default(DateTime) &&
+                   !string.IsNullOrWhiteSpace(ISBN) &&
+                   Author != null &&
+                   Genre != null;
         }
+
 
         private void SelectFileCommandExecute()
         {
@@ -217,8 +253,9 @@ namespace BookCatalog.ViewModels
                 Cover = bitmap;
                 using (var dbContext = new MyDbContext())
                 {
-                    CoverImage cover = dbContext.CoverImages.FirstOrDefault(g => g.Id == _book.genre_id);
-                    cover.CoverData = DataService.SetImageInDB(filePath);
+                    CoverImage cover = dbContext.CoverImages.FirstOrDefault(g => g.id == _book.genre_id);
+                    cover.cover_data = DataService.SetImageInDB(filePath);
+                    dbContext.SaveChanges();
                 }
             }
         }
