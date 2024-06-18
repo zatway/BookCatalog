@@ -5,43 +5,36 @@ using BookCatalog.ViewModels;
 using BookCatalog.Models;
 using BookCatalog.Service;
 using BookCatalog.Views;
+using BookCatalog.Commands;
 
 namespace BookCatalog.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+
         private object _currentViewModel;
         public object CurrentViewModel
         {
-            get;
-            set;
+            get => _currentViewModel;
+            set
+            {
+                _currentViewModel = value;
+                OnPropertyChanged(nameof(CurrentViewModel));
+            }
         }
-        
 
         public ICommand ShowBookCatalogViewCommand { get; }
-        public ICommand ShowAddBookViewCommand { get; }
-        public ICommand ShowEditBookViewCommand { get; }
 
-        public List<Book> Books { get; set; }
-        public RelayCommand OpenBookCatalogWindowCommand { get; }
         public MainWindowViewModel()
         {
-            Books = GetDataInDB.LoadBooks();
-            OpenBookCatalogWindowCommand = new RelayCommand(AddBookView);
+            ShowBookCatalogViewCommand = new RelayCommand(o => ShowBookCatalogView());
+            ShowBookCatalogView();
         }
 
-        private void AddBookView(object parameter)
+        public void ShowBookCatalogView()
         {
-            AddBookWindow secondWindow = new AddBookWindow();
-            secondWindow.DataContext = new AddBookViewModels(); // Привязка ViewModel
-            secondWindow.Show(); // Открыть новое окно
-        }
-
-
-        public void EditBookView()
-        {
-           // CurrentViewModel = new EditBookViewModels(this);
+            
         }
 
         protected void OnPropertyChanged(string propertyName)
@@ -49,6 +42,6 @@ namespace BookCatalog.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        
+
     }
 }

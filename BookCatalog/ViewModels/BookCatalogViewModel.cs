@@ -1,5 +1,6 @@
 ﻿using BookCatalog.Models;
 using BookCatalog.Service;
+using BookCatalog.Views;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,30 +9,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using BookCatalogWPF;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Windows;
+using BookCatalog.Commands;
 
 namespace BookCatalog.ViewModels
 {
     public class BookCatalogViewModel : INotifyPropertyChanged
     {
-        private readonly MainWindowViewModel _mainViewModel;
         public ICommand OpenCardBookCommand { get; }
         public ICommand AddBookCommand { get; }
         public ICommand PreviousPageCommand { get; }
         public ICommand NextPageCommand { get; }
-        public List<Books> BooksList
+        private ICommand _openWindowCommand;
+        public ICommand OpenWindowCommand
         {
-            get => BooksList;
-            set
-            {
-                
-            }
+            get { return _openWindowCommand; }
         }
-
+        public List<Book> BooksList { get; private set; }
+        
         public BookCatalogViewModel()
         {
             OpenCardBookCommand = new RelayCommand(o => OpenCardBooks());
@@ -43,7 +41,7 @@ namespace BookCatalog.ViewModels
 
         void LoadBooks()
         {
-            BooksList = GetDataInDB.GetFullTable<Books>();
+            BooksList = DataService.GetFullTable<Book>();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -72,13 +70,15 @@ namespace BookCatalog.ViewModels
 
         void PreviousPage()
         {
-            Console.WriteLine("PreviousPage");
+            MessageBox.Show("PreviousPage");
         }
 
         void OpenCardBooks()
         {
-            MainWindowViewModel main = new MainWindowViewModel();
-
+            var viewModel = new EditBookViewModel(); // Замените на вашу ViewModel для второго окна
+            var window = new EditBookWindow(); // Замените на ваше окно WPF
+            window.DataContext = viewModel;
+            window.ShowDialog();
         }
 
         void AddBook()

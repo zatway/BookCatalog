@@ -23,7 +23,6 @@ namespace BookCatalog.Views
         public EditBookWindow()
         {
             InitializeComponent();
-            DataContext = new EditBookViewModel(); 
         }
     }
 }

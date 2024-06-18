@@ -4,37 +4,36 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BookCatalog.Views"
-        mc:Ignorable="d" Height="600" Width="1000">
+        mc:Ignorable="d"
+        Title="Редактирование книги" Height="600" Width="800"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="45"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="45"/>
-        </Grid.ColumnDefinitions>
+        <!-- Привязка к свойствам ViewModel через Binding -->
+        <Label Content="Название:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="0" Grid.Column="0" Margin="10,10,0,0" Width="490" Height="38"/>
+        <TextBox FontSize="25" HorizontalAlignment="Left" Margin="10,53,0,0" Grid.Row="0" TextWrapping="Wrap" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="0" Text="{Binding Title}"/>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="30"/>
-        </Grid.RowDefinitions>
+        <Label Content="Автор:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="0" Margin="10,93,0,0" Width="490"/>
+        <ComboBox FontSize="25" Width="490" Height="40" HorizontalAlignment="Left" Margin="10,136,0,0" Grid.Row="1" VerticalAlignment="Top" Grid.Column="0"
+          ItemsSource="{Binding Authors}" 
+          DisplayMemberPath="FullName" 
+          SelectedItem="{Binding SelectedAuthor}" />
+        <CheckBox Grid.Row="1" Grid.Column="0" IsChecked="{Binding IsAuthorNotInListChecked, Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,181,0,323" Content="Автора нету в списке" Command="{Binding AuthorCheckBoxCommand}"/>
 
-        <Label Content="Название:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Margin="10,10,0,0" Width="490" Height="38"/>
-        <TextBox FontSize="25" HorizontalAlignment="Left" Margin="10,53,0,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="1"/>
+        <Label Content="Дата издания:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="2" Grid.Column="0" Margin="10,201,0,0" Width="490"/>
+        <DatePicker FontSize="25" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="0" Margin="10,249,0,0" SelectedDate="{Binding YearOfManufacture, Mode=TwoWay}"/>
 
-        <Label Content="Автор" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Margin="10,93,0,0" Width="490"/>
-        <ComboBox FontSize="25" Width="490" Height="40" HorizontalAlignment="Left" Margin="10,136,0,0" Grid.Row="1" VerticalAlignment="Top" Grid.Column="1"/>
-        <CheckBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Margin="10,181,242,323" Content="Автора нету в списке" Command="{Binding CheckBoxCommand}"/>
+        <Label Content="ISBN:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="3" Grid.Column="0" Margin="10,303,0,0" Width="490"/>
+        <TextBox FontSize="25" HorizontalAlignment="Left" Grid.Row="3" Text="{Binding ISBN}" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="0" Margin="10,346,0,0"/>
 
-        <Label Content="Дата изания:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Margin="10,201,0,0" Width="490"/>
-        <DatePicker FontSize="25" HorizontalAlignment="Left" Grid.Row="1" Text="" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="1" Margin="10,249,0,0"/>
+        <Label Content="Жанр:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="4" Grid.Column="0" Margin="10,391,0,0" Width="490"/>
+        <ComboBox FontSize="25" Width="490" Height="40" HorizontalAlignment="Left" Margin="10,434,0,0" Grid.Row="4" VerticalAlignment="Top" Grid.Column="0"
+          ItemsSource="{Binding Genres}" 
+          SelectedItem="{Binding SelectedGenre}" />
+        <CheckBox Grid.Row="4" Grid.Column="0" IsChecked="{Binding IsGenreNotInListChecked, Mode=TwoWay}" HorizontalAlignment="Left" Margin="10,479,0,25" Content="Жанра нету в списке" Command="{Binding GenreCheckBoxCommand}"/>
 
-        <Label Content="ISBN:" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Margin="10,303,0,0" Width="490"/>
-        <TextBox FontSize="25" HorizontalAlignment="Left" Grid.Row="1" Text="" VerticalAlignment="Top" Width="490" Height="40" Grid.Column="1" Margin="10,346,0,0"/>
+        <Image Grid.Row="0" Grid.Column="2" VerticalAlignment="Top" Height="366" Margin="522,10,10,0" Source="{Binding Cover}"/>
+        <Button Grid.Row="0" Margin="684,388,10,171" Content="Выбрат файл" Command="{Binding SelectFileCommandExecute}"/>
+        <Button FontSize="25" HorizontalAlignment="Right" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Margin="0,469,10,0" Grid.Column="1" Command="{Binding SaveCommand}" Content="{Binding Action}"/>
 
-        <Label Content="Жанр" FontSize="25" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Row="1" Grid.Column="1" Margin="10,391,0,0" Width="490"/>
-        <ComboBox FontSize="25" Width="490" Height="40" HorizontalAlignment="Left" Margin="10,434,0,0" Grid.Row="1" VerticalAlignment="Top" Grid.Column="1"/>
-        <CheckBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" Margin="10,479,0,25" Content="Автора нету в списке" Command="{Binding CheckBoxCommand}"/>
-
-        <Button Content="Редактировать" FontSize="25" HorizontalAlignment="Right" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Grid.Row="1" Margin="0,469,0,0" Click="GiveBookButton_Click" Grid.Column="1"/>
     </Grid>
 </Window>

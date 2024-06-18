@@ -15,6 +15,7 @@ namespace BookCatalog.Service
         {
             optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=BookCatalogDataBase;Username=postgres;Password=123;");
         }
+
         public bool TestConnection()
         {
             try

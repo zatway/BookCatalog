@@ -9,15 +9,13 @@ namespace BookCatalog.Models
 {
     public class Book
     {
-        public int ID { get; set; }
-        public string Title { get; set; }
-        public int AuthorID { get; set; }
-        public DateTime YearOfManufacture { get; set; }
-        public string ISBN { get; set; }
-        public int CoverimageId { get; set; }
-        public string Description { get; set; }
-        public int GenreID { get; set; }
-
-
+        public int id { get; set; }
+        public string title { get; set; }
+        public int author_id { get; set; }
+        public DateTime year_of_manufacture { get; set; }
+        public string isbn { get; set; }
+        public int coverimage_id { get; set; }
+        public string description { get; set; }
+        public int genre_id { get; set; }
     }
 }
