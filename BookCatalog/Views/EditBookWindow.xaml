@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BookCatalog.Views"
         mc:Ignorable="d"
-        Title="Редактирование книги" Height="600" Width="800"
+        Height="650" Width="1270"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Grid>
         <Grid.RowDefinitions>
@@ -13,8 +13,9 @@
             <RowDefinition Height="69*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="51*"/>
-            <ColumnDefinition Width="29*"/>
+            <ColumnDefinition Width="248*"/>
+            <ColumnDefinition Width="193*"/>
+            <ColumnDefinition Width="194*"/>
         </Grid.ColumnDefinitions>
         <StackPanel>
             <Label Content="Название:" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="0" Margin="0,10,0,0" Width="490" Height="38"/>
@@ -23,7 +24,7 @@
             <ComboBox VerticalAlignment="Top" FontSize="25" Width="490" Height="40"
    ItemsSource="{Binding Authors}" 
    DisplayMemberPath="full_name" 
-   SelectedItem="{Binding SelectedAuthor}" />
+   SelectedItem="{Binding Author}" />
             <CheckBox IsChecked="{Binding IsAuthorNotInListChecked, Mode=TwoWay}" VerticalAlignment="Top" Content="Автора нету в списке" Command="{Binding AuthorCheckBoxCommand}" Width="138" HorizontalAlignment="Left" Margin="15"/>
             <Label Content="Дата издания:" FontSize="25" Width="490" Height="43" VerticalAlignment="Top"/>
             <DatePicker FontSize="25" Width="490" Height="40" SelectedDate="{Binding YearOfManufacture, Mode=TwoWay}" VerticalAlignment="Top"/>
@@ -32,13 +33,29 @@
             <Label Content="Жанр:" FontSize="25" Width="490" Height="43"/>
             <ComboBox FontSize="25" Width="490" Height="40"
    ItemsSource="{Binding Genres}" 
-   SelectedItem="{Binding SelectedGenre}" />
+   DisplayMemberPath="name" 
+   SelectedItem="{Binding Genre}" />
             <CheckBox IsChecked="{Binding IsGenreNotInListChecked, Mode=TwoWay}" Content="Жанра нету в списке" HorizontalAlignment="Left" Margin="15" Command="{Binding GenreCheckBoxCommand}" Width="134"/>
-
         </StackPanel>
-        <Image Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Height="366" Margin="22,10,10,0" Source="{Binding Cover}"/>
-        <Button Grid.Row="0" Margin="184,388,10,69" Content="Выбрат файл" Command="{Binding SelectFileCommand}" Grid.Column="1"/>
-        <Button FontSize="25" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Command="{Binding SaveCommand}" Content="Сохарнить" Margin="45,10,0,0" Grid.Row="1"/>
-
+        <StackPanel Grid.Column="1" Margin="15">
+            <TextBox Height="350" Margin="20" Text="{Binding Description, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+         TextWrapping="Wrap" 
+         VerticalScrollBarVisibility="Auto">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Setter Property="BorderBrush" Value="Gray" />
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Style.Triggers>
+                            <Trigger Property="Validation.HasError" Value="true">
+                                <Setter Property="BorderBrush" Value="Red" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+        </StackPanel>
+        <Image Grid.Row="0" Grid.Column="2" VerticalAlignment="Top" Height="366" Margin="22,10,10,0" Source="{Binding Cover}" Grid.ColumnSpan="2"/>
+        <Button Grid.Row="0" Margin="184,432,10,69" Content="Выбрат файл" Command="{Binding SelectFileCommand}" Grid.Column="2" Grid.ColumnSpan="2"/>
+        <Button FontSize="25" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Command="{Binding SaveCommand}" Content="Сохарнить" Margin="45,10,0,0" Grid.Row="1"/>
     </Grid>
 </Window>

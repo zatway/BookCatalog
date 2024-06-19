@@ -14,8 +14,8 @@ namespace BookCatalog.Models
         public int author_id { get; set; }
         public DateTime year_of_manufacture { get; set; }
         public string isbn { get; set; }
-        public int coverimage_id { get; set; }
-        public string description { get; set; }
+        public int? coverimage_id { get; set; }
+        public string? description { get; set; }
         public int genre_id { get; set; }
     }
 }

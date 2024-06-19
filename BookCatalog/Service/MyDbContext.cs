@@ -9,7 +9,7 @@ namespace BookCatalog.Service
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Genre> Genres { get; set; }
-        public DbSet<CoverImage> CoverImages { get; set; }
+        public DbSet<CoverImage> CoverImage { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -21,6 +21,7 @@ namespace BookCatalog.Service
             }
         }
 
+
         public static string GetAuthorName(int authorId)
         {
             using (var dbContext = new MyDbContext())
@@ -46,7 +47,7 @@ namespace BookCatalog.Service
         {
             using (var dbContext = new MyDbContext())
             {
-                CoverImage cover = dbContext.CoverImages.FirstOrDefault(c => c.id == coverId);
+                CoverImage cover = dbContext.CoverImage.FirstOrDefault(c => c.id == coverId);
                 if (cover.cover_data == null || cover.cover_data.Length == 0)
                     return null;
                 try

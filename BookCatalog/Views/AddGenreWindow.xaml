@@ -9,7 +9,7 @@
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <StackPanel>
         <Label Content="Название жанра:" FontSize="25" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="0" Width="490" Height="46"/>
-        <TextBox FontSize="25" TextWrapping="Wrap" HorizontalAlignment="Left" Width="490" Height="40" Text="{Binding GenreName}" Margin="5,5,5,5"/>
+        <TextBox FontSize="25" TextWrapping="Wrap" HorizontalAlignment="Left" Width="490" Height="40" Text="{Binding Name}" Margin="5,5,5,5"/>
         <Button FontSize="25" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Command="{Binding SaveCommand}" Content="Сохранить" Margin="45,10,0,0" Grid.Row="1"/>
     </StackPanel>
 </Window>
