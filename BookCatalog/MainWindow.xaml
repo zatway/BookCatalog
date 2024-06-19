@@ -25,6 +25,7 @@
             <Button Command="{Binding StartSearchCommamnd}" Content="🔍" Foreground="#f3f3f3" Background="#41a479" Width="34"/>
             <Button Command="{Binding OpenCardBookCommand}" Content="Открыть карточку" Foreground="#f3f3f3" Background="#41a479" Width="113"/>
             <Button Content="Добавить книгу" Command="{Binding AddBookCommand}" Foreground="#f3f3f3" Background="#41a479" Width="110"/>
+            <Button Content="Удалить книгу" Command="{Binding RemoveBookCommand}" Foreground="#f3f3f3" Background="#41a479" Width="110"/>
             <ComboBox Width="150" SelectedItem="{Binding SelectedFilter}" Background="#41a479" Foreground="Black" BorderThickness="1" BorderBrush="#41a479" VerticalAlignment="Top">
                 <ComboBoxItem Content="По названию"/>
                 <ComboBoxItem Content="По автору"/>

@@ -21,34 +21,11 @@ namespace BookCatalog.Service
             }
         }
 
-
-        public static string GetAuthorName(int authorId)
+        public static BitmapImage GetCover(CoverImage cover)
         {
             using (var dbContext = new MyDbContext())
             {
-                Author author = dbContext.Authors.FirstOrDefault(a => a.id == authorId);
-                if (author != null)
-                    return author.full_name;
-                return null;
-            }
-        }
-        public static string GetGenreName(int genreId)
-        {
-            using (var dbContext = new MyDbContext())
-            {
-                Genre genre = dbContext.Genres.FirstOrDefault(a => a.id == genreId);
-                if (genre != null)
-                    return genre.name;
-                return null;
-            }
-        }
-
-        public static BitmapImage GetCover(int coverId)
-        {
-            using (var dbContext = new MyDbContext())
-            {
-                CoverImage cover = dbContext.CoverImage.FirstOrDefault(c => c.id == coverId);
-                if (cover.cover_data == null || cover.cover_data.Length == 0)
+                if (cover == null || cover.cover_data == null || cover.cover_data.Length == 0)
                     return null;
                 try
                 {
@@ -70,7 +47,35 @@ namespace BookCatalog.Service
                 
             }
         }
+        public static CoverImage GetCoverImageFromBitmap(BitmapImage bitmapImage)
+        {
+            if (bitmapImage == null || bitmapImage.StreamSource == null)
+                return null;
 
+            try
+            {
+                byte[] imageData;
+                using (var memoryStream = new MemoryStream())
+                {
+                    BitmapEncoder encoder = new PngBitmapEncoder(); 
+                    encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
+                    encoder.Save(memoryStream);
+                    imageData = memoryStream.ToArray();
+                }
+
+                CoverImage cover = new CoverImage
+                {
+                    cover_data = imageData
+                };
+
+                return cover;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    
         public static byte[] SetImageInDB(string imagePath)
         {
             if (!File.Exists(imagePath))

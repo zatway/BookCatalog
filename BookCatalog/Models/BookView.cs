@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BookCatalog.Models
 {
-    public class BookView
+    public class BookForOutput
     {
         private int _id;
         public int Id

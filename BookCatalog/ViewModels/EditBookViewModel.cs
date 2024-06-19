@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using BookCatalog.Commands;
 using BookCatalog.Models;
 using BookCatalog.Service;
-using BookCatalog.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
@@ -20,15 +15,17 @@ namespace BookCatalog.ViewModels
 {
     public class EditBookViewModel : INotifyPropertyChanged
     {
-        private Book _book;
         private readonly MyDbContext _dbContext = new MyDbContext();
+        private Book _book;
+        private BookForOutput _bookForOutput;
+        private BitmapImage _cover;
 
-        public EditBookViewModel(BookView bookView)
+        public EditBookViewModel(BookForOutput bookForOutput)
         {
-            LoadBook(bookView.Id);
+            _bookForOutput = bookForOutput;
+            LoadBook();
             LoadAuthors();
             LoadGenres();
-            LoadCover();
         }
 
         public EditBookViewModel()
@@ -39,18 +36,18 @@ namespace BookCatalog.ViewModels
 
         public string Action { get; set; }
 
-        private void LoadBook(int bookId)
+        private void LoadBook()
         {
-            _book = _dbContext.Books.FirstOrDefault(b => b.id == bookId);
+            _book = _dbContext.Books.FirstOrDefault(b => b.id == _bookForOutput.Id);
             if (_book == null)
-            {
                 return;
-            }
 
             Title = _book.title;
             YearOfManufacture = _book.year_of_manufacture;
             ISBN = _book.isbn;
             Description = _book.description;
+            _cover = DataService.GetCover(_dbContext.CoverImage.FirstOrDefault(c => c.id == _book.coverimage_id));
+            OnPropertyChanged(nameof(Cover));
         }
 
         private void LoadAuthors()
@@ -58,18 +55,9 @@ namespace BookCatalog.ViewModels
             Authors = new ObservableCollection<Author>(_dbContext.Authors.ToList());
         }
 
-        private void LoadGenres() 
-        { 
-            Genres = new ObservableCollection<Genre>(_dbContext.Genres.ToList()); 
-        }
-
-        private void LoadCover()
+        private void LoadGenres()
         {
-            if(Cover != null)
-            {
-                Cover = DataService.GetCover((int)_book.coverimage_id);
-            }
-            
+            Genres = new ObservableCollection<Genre>(_dbContext.Genres.ToList());
         }
 
         private Author _author;
@@ -96,45 +84,6 @@ namespace BookCatalog.ViewModels
                 {
                     _genre = value;
                     OnPropertyChanged(nameof(Genre));
-                }
-            }
-        }
-
-        private BitmapImage _cover;
-        public BitmapImage Cover
-        {
-            get { return _cover; }
-            set
-            {
-                if (_cover != value)
-                {
-                    _cover = value;
-                    OnPropertyChanged(nameof(Cover));
-                }
-            }
-        }
-
-        private ObservableCollection<Author> _authors;
-        public ObservableCollection<Author> Authors
-        {
-            get { return _authors; }
-            set
-            {
-                _authors = value;
-                OnPropertyChanged(nameof(Authors));
-            }
-        }
-
-        private ObservableCollection<Genre> _genres;
-        public ObservableCollection<Genre> Genres
-        {
-            get { return _genres; }
-            set
-            {
-                if (_genres != value)
-                {
-                    _genres = value;
-                    OnPropertyChanged(nameof(Genres));
                 }
             }
         }
@@ -167,17 +116,37 @@ namespace BookCatalog.ViewModels
             }
         }
 
-        private int _coverimageId;
-        public int CoverimageId
+        private string _coverFilePath;
+        public string CoverFilePath
         {
-            get { return _coverimageId; }
+            get { return _coverFilePath; }
             set
             {
-                if (_coverimageId != value)
+                if (_coverFilePath != value)
                 {
-                    _coverimageId = value;
-                    OnPropertyChanged(nameof(CoverimageId));
+                    _coverFilePath = value;
+                    OnPropertyChanged(nameof(CoverFilePath));
+                    LoadCoverImage();
                 }
+            }
+        }
+
+        private void LoadCoverImage()
+        {
+            if (!string.IsNullOrEmpty(CoverFilePath))
+            {
+                _cover = new BitmapImage(new Uri(CoverFilePath));
+                OnPropertyChanged(nameof(Cover));
+            }
+        }
+
+        public BitmapImage Cover
+        {
+            get { return _cover; }
+            set
+            {
+                _cover = value;
+                OnPropertyChanged(nameof(Cover));
             }
         }
 
@@ -238,10 +207,19 @@ namespace BookCatalog.ViewModels
                     _book.year_of_manufacture = YearOfManufacture.ToUniversalTime();
                     _book.isbn = ISBN;
 
-                        _book.author_id = Author.id;
-
-
-                    _book.genre_id = Genre.id;   
+                    _book.author_id = Author.id;
+                    CoverImage coverImage = dbContext.CoverImage.FirstOrDefault(c => c.id == _book.coverimage_id);
+                    byte[] coverData = DataService.SetImageInDB(CoverFilePath);
+                    if (coverImage != null)
+                    {
+                        coverImage.cover_data = coverData;
+                    }
+                    else
+                    {
+                        coverImage.cover_data = coverData;
+                        dbContext.CoverImage.Add(coverImage);
+                    }
+                    _book.genre_id = Genre.id;
                     _book.description = Description;
 
                     dbContext.Entry(_book).State = EntityState.Modified;
@@ -291,81 +269,35 @@ namespace BookCatalog.ViewModels
 
             if (openFileDialog.ShowDialog() == true)
             {
-                string filePath = openFileDialog.FileName;
-                var bitmap = new BitmapImage(new Uri(filePath));
-                Cover = bitmap;
+                CoverFilePath = openFileDialog.FileName;
+            }
+        }
 
-                byte[] coverData = DataService.SetImageInDB(filePath);
+        private ObservableCollection<Author> _authors;
+        public ObservableCollection<Author> Authors
+        {
+            get { return _authors; }
+            set
+            {
+                _authors = value;
+                OnPropertyChanged(nameof(Authors));
+            }
+        }
 
-                using (var dbContext = new MyDbContext())
+        private ObservableCollection<Genre> _genres;
+        public ObservableCollection<Genre> Genres
+        {
+            get { return _genres; }
+            set
+            {
+                if (_genres != value)
                 {
-                    CoverImage cover = dbContext.CoverImage.FirstOrDefault(g => g.id == _book.coverimage_id);
-
-                    if (cover == null)
-                    {
-                        CoverImage coverImage = new CoverImage
-                        {
-                            cover_data = coverData
-                        };
-                        dbContext.CoverImage.Add(coverImage);
-                        dbContext.SaveChanges();
-                        _book.coverimage_id = coverImage.id;
-                    }
-                    else
-                    {
-                        cover.cover_data = coverData;
-                        dbContext.CoverImage.Update(cover);
-                    }
-
-                    dbContext.SaveChanges();
+                    _genres = value;
+                    OnPropertyChanged(nameof(Genres));
                 }
             }
         }
 
-        private ICommand _authorCheckBoxCommand;
-        private ICommand _genreCheckBoxCommand;
-
-        public ICommand AuthorCheckBoxCommand
-        {
-            get
-            {
-                if (_authorCheckBoxCommand == null)
-                {
-                    _authorCheckBoxCommand = new RelayCommand(param => CheckBoxCommandExecute(param, "Author"));
-                }
-                return _authorCheckBoxCommand;
-            }
-        }
-
-        public ICommand GenreCheckBoxCommand
-        {
-            get
-            {
-                if (_genreCheckBoxCommand == null)
-                {
-                    _genreCheckBoxCommand = new RelayCommand(param => CheckBoxCommandExecute(param, "Genre"));
-                }
-                return _genreCheckBoxCommand;
-            }
-        }
-
-        private void CheckBoxCommandExecute(object parameter, string type)
-        {
-            if (type == "Author")
-            {
-                var window = new AddAuthorsWindow();
-                var viewModel = new AddAutorsViewModel(window);
-                window.DataContext = viewModel;
-                window.ShowDialog();
-            }
-            else if (type == "Genre")
-            {
-                var window = new AddGenreWindow();
-                var viewModel = new AddGenreViewModel(window);
-                window.DataContext = viewModel;
-                window.ShowDialog();
-            }
-        }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
