@@ -8,7 +8,8 @@ namespace BookCatalog.Models
 {
     public class Genre
     {
-        public int id { get; set; }
-        public string name { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<Book> Books { get; set; }
     }
 }

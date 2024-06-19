@@ -5,8 +5,9 @@ using System.IO;
 namespace BookCatalog.Models
 {
     public class CoverImage
-    {   
-        public int id { get; set; }
-        public byte[] cover_data { get; set; }
+    {
+        public int Id { get; set; }
+        public byte[] ImageUrl { get; set; }
+        public ICollection<Book> Books { get; set; }
     }
 }
