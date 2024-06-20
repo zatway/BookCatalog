@@ -12,6 +12,9 @@ using BookCatalog.Commands;
 using BookCatalog.Views;
 using Npgsql;
 using System.Windows.Controls;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace BookCatalog.ViewModels
 {
@@ -26,17 +29,18 @@ namespace BookCatalog.ViewModels
         public ICommand StartSearchCommamnd { get; }
         private string _searchQuery;
         private int _pageNumber = 1;
-        private ObservableCollection<BookForOutput> _booksList;
+        private ObservableCollection<Book> _booksList;
         public BookCatalogViewModel()
         {
+            CreateDBOrExistsCheck();
             OpenCardBookCommand = new RelayCommand(o => OpenCardBooks());
             AddBookCommand = new RelayCommand(o => AddBook());
             RemoveBookCommand = new RelayCommand(o => RemoveBook());
             PreviousPageCommand = new RelayCommand(o => PreviousPage());
             NextPageCommand = new RelayCommand(o => NextPage());
             StartSearchCommamnd = new RelayCommand(o => StartSearch());
+            _booksList = new ObservableCollection<Book>();
             LoadBooks();
-            _booksList = new ObservableCollection<BookForOutput>();
             _pageNumber = 1;
             _pageSize = 5;
             PagenatedOutput();
@@ -76,7 +80,7 @@ namespace BookCatalog.ViewModels
                 OnPropertyChanged(nameof(SearchQuery));
             }
         }
-        public ObservableCollection<BookForOutput> BooksList
+        public ObservableCollection<Book> BooksList
         {
             get { return _booksList; }
             set
@@ -116,23 +120,29 @@ namespace BookCatalog.ViewModels
             }
         }
 
+        void CreateDBOrExistsCheck()
+        {
+           using (var dbContext = new MyDbContext())
+            {
+                if (dbContext.Database.GetService<IRelationalDatabaseCreator>().Exists())//проверка на существование бд
+                {
+                    dbContext.Database.Migrate();
+                }
+                else
+                {
+                    dbContext.Database.EnsureCreated();//создание бд
+                }
+                
+            }
+        }
+
         void LoadBooks()
         {
             using (var dbContext = new MyDbContext())
             {
                 var books = DataService.GetFullTable<Book>();
 
-                var bookView = books.Select(b => new BookForOutput
-                {
-                    Id = b.id,
-                    Title = b.title,
-                    Author = dbContext.Authors.FirstOrDefault(a => a.id == b.author_id),
-                    YearOfManufacture = b.year_of_manufacture,
-                    ISBN = b.isbn,
-                    Genre = dbContext.Genres.FirstOrDefault(g => g.id == b.genre_id)
-                }).ToList();
-
-                BooksList = new ObservableCollection<BookForOutput>(bookView);
+                BooksList = new ObservableCollection<Book>(books);
             }
         }
 
@@ -148,18 +158,18 @@ namespace BookCatalog.ViewModels
                             new NpgsqlParameter("@searchQuery", $"%{SearchQuery}%"),
                             new NpgsqlParameter("@pageNumber", PageNumber), // For simplicity, start at page 1
                             new NpgsqlParameter("@pageSize", PageSize)) // Adjust page size as needed
-                        .Select(b => new BookForOutput
+                        .Select(b => new Book
                         {
-                            Id = b.id,
-                            Title = b.title,
-                            Author = dbContext.Authors.FirstOrDefault(a => a.id == b.author_id),
-                            YearOfManufacture = b.year_of_manufacture,
-                            ISBN = b.isbn,
-                            Genre = dbContext.Genres.FirstOrDefault(g => g.id == b.genre_id)
+                            Id = b.Id,
+                            Title = b.Title,
+                            Author = b.Author,
+                            YearOfManufacture = b.YearOfManufacture,
+                            ISBN = b.ISBN,
+                            Genre = b.Genre
                         })
                         .ToList();
 
-                    BooksList = new ObservableCollection<BookForOutput>(books);
+                    BooksList = new ObservableCollection<Book>(books);
                     OnPropertyChanged(nameof(BooksList));
                 }
             }
@@ -173,24 +183,22 @@ namespace BookCatalog.ViewModels
                 using (var dbContext = new MyDbContext())
                 {
                     string selectedFilter = SelectedFilter?.Content.ToString();
-                    var books = dbContext.Books
+                    List<Book> books = dbContext.Books
                         .FromSqlRaw(@"
                             SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
                             new NpgsqlParameter("@selectedFilter", selectedFilter),
                             new NpgsqlParameter("@pageNumber", PageNumber),
                             new NpgsqlParameter("@pageSize", PageSize))
-                        .Select(b => new BookForOutput
+                        .Select(b => new Book
                         {
-                            Id = b.id,
-                            Title = b.title,
-                            Author = dbContext.Authors.FirstOrDefault(a => a.id == b.author_id),
-                            YearOfManufacture = b.year_of_manufacture,
-                            ISBN = b.isbn,
-                            Genre = dbContext.Genres.FirstOrDefault(g => g.id == b.genre_id)
-                        })
-                        .ToList();
-
-                    BooksList = new ObservableCollection<BookForOutput>(books);
+                            Id = b.Id,
+                            Title = b.Title,
+                            Author = b.Author,
+                            YearOfManufacture = b.YearOfManufacture,
+                            ISBN = b.ISBN,
+                            Genre = b.Genre
+                        }).ToList();
+                    BooksList = new ObservableCollection<Book>(books);
                 }
            
                 OnPropertyChanged(nameof(BooksList));
@@ -207,15 +215,15 @@ namespace BookCatalog.ViewModels
 
             var books = query.Select(b => new BookForOutput
             {
-                Id = b.id,
-                Title = b.title,
-                Author = dbContext.Authors.FirstOrDefault(a => a.id == b.author_id),
-                YearOfManufacture = b.year_of_manufacture,
-                ISBN = b.isbn,
-                Genre = dbContext.Genres.FirstOrDefault(g => g.id == b.genre_id)
+                Id = b.Id,
+                Title = b.Title,
+                Author = b.Author,
+                YearOfManufacture = b.YearOfManufacture,
+                ISBN = b.ISBN,
+                Genre = b.Genre
             }).ToList();
 
-                 BooksList = new ObservableCollection<BookForOutput>(books);
+                 BooksList = new ObservableCollection<B>(books);
                 OnPropertyChanged(nameof(BooksList));
             }
         }
