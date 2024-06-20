@@ -55,7 +55,7 @@ namespace BookCatalog.Service
             {
                 entity.ToTable("authors");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.FullName).IsRequired().HasMaxLength(255);
             });
 
             modelBuilder.Entity<Genre>(entity =>
@@ -69,7 +69,7 @@ namespace BookCatalog.Service
             {
                 entity.ToTable("coverimages");
                 entity.HasKey(e => e.Id);
-                entity.Property(e => e.ImageUrl).IsRequired();
+                entity.Property(e => e.ImageData).IsRequired();
             });
         }
     }

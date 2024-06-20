@@ -9,43 +9,116 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using BookCatalog.Commands;
-using BookCatalog.Views;
 using Npgsql;
 using System.Windows.Controls;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace BookCatalog.ViewModels
 {
     public class BookCatalogViewModel : INotifyPropertyChanged
     {
-        private BookForOutput _selectedBook;
-        public ICommand OpenCardBookCommand { get; }
-        public ICommand AddBookCommand { get; }
-        public ICommand RemoveBookCommand { get; }
-        public ICommand PreviousPageCommand { get; }
-        public ICommand NextPageCommand { get; }
-        public ICommand StartSearchCommamnd { get; }
-        private string _searchQuery;
-        private int _pageNumber = 1;
-        private ObservableCollection<Book> _booksList;
         public BookCatalogViewModel()
         {
-            CreateDBOrExistsCheck();
-            OpenCardBookCommand = new RelayCommand(o => OpenCardBooks());
-            AddBookCommand = new RelayCommand(o => AddBook());
-            RemoveBookCommand = new RelayCommand(o => RemoveBook());
-            PreviousPageCommand = new RelayCommand(o => PreviousPage());
-            NextPageCommand = new RelayCommand(o => NextPage());
-            StartSearchCommamnd = new RelayCommand(o => StartSearch());
-            _booksList = new ObservableCollection<Book>();
-            LoadBooks();
+            DataService.CreateDBOrExistsCheck();
             _pageNumber = 1;
-            _pageSize = 5;
-            PagenatedOutput();
+            PageSize = 5;
+            BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
         }
-        public BookForOutput SelectedBook
+
+        private ICommand _openCardBookCommand;
+        public ICommand OpenCardBookCommand
+        {
+            get
+            {
+                if (_openCardBookCommand == null)
+                {
+                    _openCardBookCommand = new RelayCommand(o =>
+                    {
+                        WindowControlService.OpenCardBooks(SelectedBook);
+                        UpdateBookList();
+                    });
+                }
+                return _openCardBookCommand;
+            }
+        }
+
+        private ICommand _openWindowAddBookCommand;
+        public ICommand OpenWindowAddBookCommand
+        {
+            get
+            {
+                if (_openWindowAddBookCommand == null)
+                {
+                    _openWindowAddBookCommand = new RelayCommand(o =>
+                    {
+                        WindowControlService.OpenWindowAddBook();
+                        UpdateBookList();
+                    });
+                }
+                return _openWindowAddBookCommand;
+            }
+        }
+
+        private ICommand _removeBookCommand;
+        public ICommand RemoveBookCommand
+        {
+            get
+            {
+                if (_removeBookCommand == null)
+                {
+                    _removeBookCommand = new RelayCommand(o =>
+                    {
+                        DataService.RemoveBookForDB(SelectedBook);
+                        UpdateBookList();
+                    });
+                }
+                return _removeBookCommand;
+            }
+        }
+
+        private ICommand _previousPageCommand;
+        public ICommand PreviousPageCommand
+        {
+            get
+            {
+                if (_previousPageCommand == null)
+                {
+                    _previousPageCommand = new RelayCommand(o => PreviousPage());
+                }
+                return _previousPageCommand;
+            }
+        }
+
+        private ICommand _nextPageCommand;
+        public ICommand NextPageCommand
+        {
+            get
+            {
+                if (_nextPageCommand == null)
+                {
+                    _nextPageCommand = new RelayCommand(o => NextPage());
+                }
+                return _nextPageCommand;
+            }
+        }
+
+        private ICommand _startSearchCommand;
+        public ICommand StartSearchCommand
+        {
+            get
+            {
+                if (_startSearchCommand == null)
+                {
+                    _startSearchCommand = new RelayCommand(o =>
+                    {
+                        BooksList = DataService.StartSearch(SearchQuery, PageNumber, PageSize);
+                    });
+                }
+                return _startSearchCommand;
+            }
+        }
+
+        private Book _selectedBook;
+        public Book SelectedBook
         {
             get { return _selectedBook; }
             set
@@ -57,6 +130,7 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
+
         private ComboBoxItem _selectedFilter;
         public ComboBoxItem SelectedFilter
         {
@@ -67,10 +141,12 @@ namespace BookCatalog.ViewModels
                 {
                     _selectedFilter = value;
                     OnPropertyChanged(nameof(SelectedFilter));
-                    ApplyFilter();
+                    BooksList = DataService.ApplyFilter(SelectedFilter, PageNumber, PageSize);
                 }
             }
         }
+            
+        private string _searchQuery;
         public string SearchQuery
         {
             get => _searchQuery;
@@ -80,6 +156,8 @@ namespace BookCatalog.ViewModels
                 OnPropertyChanged(nameof(SearchQuery));
             }
         }
+
+        private ObservableCollection<Book> _booksList;
         public ObservableCollection<Book> BooksList
         {
             get { return _booksList; }
@@ -92,6 +170,10 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
+
+        public readonly int PageSize;
+
+        private int _pageNumber;
         public int PageNumber
         {
             get => _pageNumber;
@@ -101,132 +183,87 @@ namespace BookCatalog.ViewModels
                 {
                     _pageNumber = value;
                     OnPropertyChanged(nameof(PageNumber));
-                    PagenatedOutput();
-                }
-            }
-        }
-        private int _pageSize;
-        public int PageSize
-        {
-            get => _pageSize;
-            set
-            {
-                if (_pageSize != value)
-                {
-                    _pageSize = value;
-                    OnPropertyChanged(nameof(PageSize));
-                    PagenatedOutput();
+                    BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
                 }
             }
         }
 
-        void CreateDBOrExistsCheck()
-        {
-           using (var dbContext = new MyDbContext())
-            {
-                if (dbContext.Database.GetService<IRelationalDatabaseCreator>().Exists())//проверка на существование бд
-                {
-                    dbContext.Database.Migrate();
-                }
-                else
-                {
-                    dbContext.Database.EnsureCreated();//создание бд
-                }
-                
-            }
-        }
 
-        void LoadBooks()
-        {
-            using (var dbContext = new MyDbContext())
-            {
-                var books = DataService.GetFullTable<Book>();
+        //private void StartSearch()
+        //{
+        //    if (SearchQuery != null)
+        //    {
+        //        using (var dbContext = new MyDbContext())
+        //        {
+        //            BooksList = new ObservableCollection<Book>(dbContext.Books
+        //                .FromSqlRaw(@"
+        //            SELECT * FROM search_books(@searchQuery, @pageNumber, @pageSize)",
+        //                    new NpgsqlParameter("@searchQuery", $"%{SearchQuery}%"),
+        //                    new NpgsqlParameter("@pageNumber", PageNumber), // For simplicity, start at page 1
+        //                    new NpgsqlParameter("@pageSize", PageSize)) // Adjust page size as needed
+        //                .Select(b => new Book
+        //                {
+        //                    Id = b.Id,
+        //                    Title = b.Title,
+        //                    Author = b.Author,
+        //                    YearOfManufacture = b.YearOfManufacture,
+        //                    ISBN = b.ISBN,
+        //                    Genre = b.Genre
+        //                }).ToList()
+        //                );
+        //        }
+        //    }
+        //    return;
+        //}
 
-                BooksList = new ObservableCollection<Book>(books);
-            }
-        }
+        //private void ApplyFilter()
+        //{
+        //    if(SelectedFilter != null)
+        //    {
+        //        using (var dbContext = new MyDbContext())
+        //        {
+        //            string selectedFilter = SelectedFilter?.Content.ToString();
+        //            BooksList = new ObservableCollection<Book>(
+        //                dbContext.Books
+        //                    .FromSqlRaw(@"
+        //                    SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
+        //                        new NpgsqlParameter("@selectedFilter", selectedFilter),
+        //                        new NpgsqlParameter("@pageNumber", PageNumber),
+        //                        new NpgsqlParameter("@pageSize", PageSize))
+        //                    .Select(b => new Book
+        //                    {
+        //                        Id = b.Id,
+        //                        Title = b.Title,
+        //                        Author = b.Author,
+        //                        YearOfManufacture = b.YearOfManufacture,
+        //                        ISBN = b.ISBN,
+        //                        Genre = b.Genre
+        //                    }).ToList()
+        //            );
+        //        }
+        //    }
+        //}
 
-        private void StartSearch()
-        {
-            if (SearchQuery != null)
-            {
-                using (var dbContext = new MyDbContext())
-                {
-                    var books = dbContext.Books
-                        .FromSqlRaw(@"
-                    SELECT * FROM search_books(@searchQuery, @pageNumber, @pageSize)",
-                            new NpgsqlParameter("@searchQuery", $"%{SearchQuery}%"),
-                            new NpgsqlParameter("@pageNumber", PageNumber), // For simplicity, start at page 1
-                            new NpgsqlParameter("@pageSize", PageSize)) // Adjust page size as needed
-                        .Select(b => new Book
-                        {
-                            Id = b.Id,
-                            Title = b.Title,
-                            Author = b.Author,
-                            YearOfManufacture = b.YearOfManufacture,
-                            ISBN = b.ISBN,
-                            Genre = b.Genre
-                        })
-                        .ToList();
+        //void PagenatedOutput()
+        //{
+        //    using (var dbContext = new MyDbContext())
+        //    {
+        //        IQueryable<Book> query = dbContext.Books;
+        //        int skip = (PageNumber - 1) * PageSize;
+        //        query = query.Skip(skip).Take(PageSize);
 
-                    BooksList = new ObservableCollection<Book>(books);
-                    OnPropertyChanged(nameof(BooksList));
-                }
-            }
-            return;
-        }
-
-        private void ApplyFilter()
-        {
-            if(SelectedFilter != null)
-            {
-                using (var dbContext = new MyDbContext())
-                {
-                    string selectedFilter = SelectedFilter?.Content.ToString();
-                    List<Book> books = dbContext.Books
-                        .FromSqlRaw(@"
-                            SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
-                            new NpgsqlParameter("@selectedFilter", selectedFilter),
-                            new NpgsqlParameter("@pageNumber", PageNumber),
-                            new NpgsqlParameter("@pageSize", PageSize))
-                        .Select(b => new Book
-                        {
-                            Id = b.Id,
-                            Title = b.Title,
-                            Author = b.Author,
-                            YearOfManufacture = b.YearOfManufacture,
-                            ISBN = b.ISBN,
-                            Genre = b.Genre
-                        }).ToList();
-                    BooksList = new ObservableCollection<Book>(books);
-                }
-           
-                OnPropertyChanged(nameof(BooksList));
-            }
-        }
-
-        void PagenatedOutput()
-        {
-            using (var dbContext = new MyDbContext())
-            { 
-                IQueryable<Book> query = dbContext.Books;
-            int skip = (PageNumber - 1) * PageSize;
-            query = query.Skip(skip).Take(PageSize);
-
-            var books = query.Select(b => new BookForOutput
-            {
-                Id = b.Id,
-                Title = b.Title,
-                Author = b.Author,
-                YearOfManufacture = b.YearOfManufacture,
-                ISBN = b.ISBN,
-                Genre = b.Genre
-            }).ToList();
-
-                 BooksList = new ObservableCollection<B>(books);
-                OnPropertyChanged(nameof(BooksList));
-            }
-        }
+        //        BooksList = new ObservableCollection<Book>(query.Select(b => new Book
+        //        {
+        //            Id = b.Id,
+        //            Title = b.Title,
+        //            Author = b.Author,
+        //            YearOfManufacture = b.YearOfManufacture,
+        //            ISBN = b.ISBN,
+        //            Genre = b.Genre
+        //        }).ToList()
+        //    );
+        //    }
+        //}
         
         private void NextPage()
         {
@@ -240,41 +277,45 @@ namespace BookCatalog.ViewModels
                 PageNumber--;
             }
         }
-        private void OpenCardBooks()
+
+        //private void OpenCardBooks()
+        //{
+        //    //if (SelectedBook != null)
+        //    //{
+        //    //    var viewModel = new EditBookViewModel(SelectedBook);
+        //    //    var window = new EditBookWindow();
+        //    //    window.DataContext = viewModel;
+        //    //    window.ShowDialog();
+        //    //}
+        //    //else
+        //    //{
+        //    //    MessageBox.Show("Книга для редактирования не выбрана");
+        //    //}
+        //}
+
+        //private void AddBook()
+        //{
+        //    var viewModel = new EditBookViewModel();
+        //    var window = new EditBookWindow();
+        //    window.DataContext = viewModel;
+        //    window.ShowDialog();
+        //    PagenatedOutput();
+        //    ApplyFilter();
+        //}
+
+        //private void RemoveBook()
+        //{
+        //    BookControlService.RemoveBook(_selectedBook);
+        //    PagenatedOutput();
+        //    ApplyFilter();
+        //}
+       
+        private void UpdateBookList()
         {
-            if (SelectedBook != null)
-            {
-                var viewModel = new EditBookViewModel(SelectedBook);
-                var window = new EditBookWindow();
-                window.DataContext = viewModel;
-                window.ShowDialog();
-            }
+            if (SelectedFilter?.Content?.ToString() != null)
+                BooksList = DataService.ApplyFilter(SelectedFilter, PageNumber, PageSize);
             else
-            {
-                MessageBox.Show("Книга для редактирования не выбрана");
-            }
-        }
-        private void AddBook()
-        {
-            var viewModel = new EditBookViewModel();
-            var window = new EditBookWindow();
-            window.DataContext = viewModel;
-            window.ShowDialog();
-            PagenatedOutput();
-            ApplyFilter();
-        }
-
-        private void RemoveBook()
-        {
-            using (var dbContext = new MyDbContext())
-            {
-                Book book = dbContext.Books.FirstOrDefault(b => b.id == _selectedBook.Id);
-                dbContext.Books.Remove(book);
-                dbContext.SaveChanges();
-            }
-            PagenatedOutput();
-            ApplyFilter();
-
+                BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

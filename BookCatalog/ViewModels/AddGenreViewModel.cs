@@ -14,11 +14,12 @@ namespace BookCatalog.ViewModels
 {
     internal class AddGenreViewModel
     {
-        private readonly Window _window;
-        public AddGenreViewModel(Window window)
+        private readonly Window _parrentWindow;
+        public AddGenreViewModel(Window parrentWindow)
         {
-            _window = window;
+            _parrentWindow = parrentWindow;
         }
+
         private string _name;
         public string Name
         {
@@ -32,11 +33,7 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+
         private ICommand _saveCommand;
         public ICommand SaveCommand
         {
@@ -49,28 +46,32 @@ namespace BookCatalog.ViewModels
                 return _saveCommand;
             }
         }
-
         public void SaveExecute()
         {
             if (Validation())
             {
                 Genre newGenre = new Genre()
                 {
-                    name = Name,
+                    Name = Name,
                 };
                 using (var dbContext = new MyDbContext())
                 {
                     dbContext.Genres.Add(newGenre);
                     dbContext.SaveChanges();
                 }
-                _window.Close();
+                _parrentWindow.Close();
             }
+            else
+                MessageBox.Show("Поле заполнено некорректно");
         }
 
-        bool Validation()
+        bool Validation() => !string.IsNullOrWhiteSpace(Name);
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            return !string.IsNullOrWhiteSpace(Name);
-
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
     }
 }

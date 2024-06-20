@@ -15,11 +15,12 @@ namespace BookCatalog.ViewModels
 {
     public class AddAutorsViewModel : INotifyPropertyChanged
     {
-        private readonly Window _window;
-        public AddAutorsViewModel(Window window)
+        private readonly Window _parrentWindow;
+        public AddAutorsViewModel(Window parrentWindow)
         {
-            _window = window;
+            _parrentWindow = parrentWindow;
         }
+
         private string _name;
         public string Name
         {
@@ -33,6 +34,7 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
+
         private string _surname;
         public string Surname
         {
@@ -46,7 +48,6 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
-
 
         private string _patronymic;
         public string Patronymic
@@ -80,28 +81,24 @@ namespace BookCatalog.ViewModels
             }
         }
 
-        public void SaveExecute()
-        {
-            if(Validation())
+            public void SaveExecute()
             {
-                string fullName = $"{Name} {Patronymic} {Surname}";
-                Author newAuthor = new Author()
+                if(Validation())
                 {
-                    full_name = fullName,
-                };
-                using (var dbContext = new MyDbContext())
-                {
-                    dbContext.Authors.Add(newAuthor);
-                    dbContext.SaveChanges();
+                    string fullName = $"{Name} {Patronymic} {Surname}";
+                    Author newAuthor = new Author()
+                    {
+                        FullName = fullName,
+                    };
+                    using (var dbContext = new MyDbContext())
+                    {
+                        dbContext.Authors.Add(newAuthor);
+                        dbContext.SaveChanges();
+                    }
+                    _parrentWindow.Close();
                 }
-                _window.Close();
             }
-        }
 
-        bool Validation()
-        {
-            return !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Surname) && !string.IsNullOrWhiteSpace(Patronymic);
-
-        }
+        bool Validation() => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Surname) && !string.IsNullOrWhiteSpace(Patronymic);
     }
 }

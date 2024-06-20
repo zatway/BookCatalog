@@ -23,7 +23,7 @@
             <Label Content="Автор:" VerticalAlignment="Top" FontSize="25" Width="490" Height="43"/>
             <ComboBox VerticalAlignment="Top" FontSize="25" Width="490" Height="40"
    ItemsSource="{Binding Authors}" 
-   DisplayMemberPath="full_name" 
+   DisplayMemberPath="Fullname" 
    SelectedItem="{Binding Author}" />
             <CheckBox IsChecked="{Binding IsAuthorNotInListChecked, Mode=TwoWay}" VerticalAlignment="Top" Content="Автора нету в списке" Command="{Binding AuthorCheckBoxCommand}" Width="138" HorizontalAlignment="Left" Margin="15"/>
             <Label Content="Дата издания:" FontSize="25" Width="490" Height="43" VerticalAlignment="Top"/>
@@ -33,7 +33,7 @@
             <Label Content="Жанр:" FontSize="25" Width="490" Height="43"/>
             <ComboBox FontSize="25" Width="490" Height="40"
    ItemsSource="{Binding Genres}" 
-   DisplayMemberPath="name" 
+   DisplayMemberPath="Name" 
    SelectedItem="{Binding Genre}" />
             <CheckBox IsChecked="{Binding IsGenreNotInListChecked, Mode=TwoWay}" Content="Жанра нету в списке" HorizontalAlignment="Left" Margin="15" Command="{Binding GenreCheckBoxCommand}" Width="134"/>
         </StackPanel>
@@ -54,8 +54,8 @@
                 </TextBox.Style>
             </TextBox>
         </StackPanel>
-        <Image Grid.Row="0" Grid.Column="2" VerticalAlignment="Top" Height="366" Margin="22,10,10,0" Source="{Binding Cover}" Grid.ColumnSpan="2"/>
+        <Image Grid.Row="0" Grid.Column="2" VerticalAlignment="Top" Height="366" Margin="22,10,10,0" Source="{Binding CoverImageBitmap}" Grid.ColumnSpan="2"/>
         <Button Grid.Row="0" Margin="184,432,10,69" Content="Выбрат файл" Command="{Binding SelectFileCommand}" Grid.Column="2" Grid.ColumnSpan="2"/>
-        <Button FontSize="25" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Command="{Binding SaveCommand}" Content="Сохарнить" Margin="45,10,0,0" Grid.Row="1"/>
+        <Button FontSize="25" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Top" Width="212" Height="45" Background="#41a479" Foreground="White" Command="{Binding SaveCommand}" Content="Сохранить" Margin="45,10,0,0" Grid.Row="1"/>
     </Grid>
 </Window>
