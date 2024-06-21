@@ -7,6 +7,10 @@ namespace BookCatalog.Service
 {
     public static class WindowControlService
     {
+        /// <summary>
+        /// Открытие окна карты книги
+        /// </summary>
+        /// <param name="SelectBook">выбранная книга</param>
         public static void OpenWindowCardBook(Book SelectBook)
         {
             if (SelectBook != null)
@@ -25,6 +29,9 @@ namespace BookCatalog.Service
             }
         }
 
+        /// <summary>
+        /// Открытие окна добавления книги
+        /// </summary>
         public static void OpenWindowAddBook()
         {
             var viewModel = new AddNewBookViewModel();
@@ -36,6 +43,9 @@ namespace BookCatalog.Service
             window.ShowDialog();
         }
 
+        /// <summary>
+        /// Открытие окна добавления жанра
+        /// </summary>
         public static void OpenWindowAddGenre()
         {
             var viewModel = new AddGenreViewModel();
@@ -47,6 +57,9 @@ namespace BookCatalog.Service
             window.ShowDialog();
         }
 
+        /// <summary>
+        /// Открытие окна добавления автора
+        /// </summary>
         public static void OpenWindowAddAuthor()
         {
             var viewModel = new AddAutorsViewModel();

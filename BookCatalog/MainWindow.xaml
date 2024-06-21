@@ -21,12 +21,13 @@
         </Grid.RowDefinitions>
         <StackPanel Background="#41a479" Orientation="Horizontal" Grid.Row="1" Grid.Column="1">
             <Label Foreground="#f3f3f3" FontSize="20" FontFamily="Bookman Old Style" VerticalAlignment="Center" Width="295" Height="34" Content="BOOKCATALOG"/>
-            <TextBox Width="199" Text="{Binding SearchQuery}" Height="24"/>
-            <Button Command="{Binding StartSearchCommamnd}" Content="🔍" Foreground="#f3f3f3" Background="#41a479" Width="34"/>
+                <TextBox Width="199" Text="{Binding SearchQuery}" Height="24"/>
+            <Button Command="{Binding StartSearchCommand}" Content="🔍" Foreground="#f3f3f3" Background="#41a479" Width="34"/>
             <Button Command="{Binding OpenCardBookCommand}" Content="Открыть карточку" Foreground="#f3f3f3" Background="#41a479" Width="113"/>
             <Button Content="Добавить книгу" Command="{Binding OpenWindowAddBookCommand}" Foreground="#f3f3f3" Background="#41a479" Width="110"/>
             <Button Content="Удалить книгу" Command="{Binding RemoveBookCommand}" Foreground="#f3f3f3" Background="#41a479" Width="110"/>
             <ComboBox Width="150" SelectedItem="{Binding SelectedFilter}" Background="#41a479" Foreground="Black" BorderThickness="1" BorderBrush="#41a479" VerticalAlignment="Top">
+                <ComboBoxItem Content="Убрать фильтры"/>
                 <ComboBoxItem Content="По названию"/>
                 <ComboBoxItem Content="По автору"/>
                 <ComboBoxItem Content="По жанру"/>

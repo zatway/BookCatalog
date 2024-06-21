@@ -23,6 +23,9 @@ namespace BookCatalog
             CreateDBOrExistsCheck();
         }
 
+        /// <summary>
+        /// Проверка на существование базы данных, ее создание
+        /// </summary>
         public static void CreateDBOrExistsCheck()
         {
             using (var dbContext = new MyDbContext())
@@ -33,17 +36,16 @@ namespace BookCatalog
             }
         }
 
+        /// <summary>
+        /// Подключение миграций
+        /// </summary>
+        /// <param name="dbContext">Коннтекст базы данных</param>
         private static void ApplyMigrations(MyDbContext dbContext)
         {
             try
             {
-               
-                List<IMigrator> migratorList = new List<IMigrator> { new AddFilterBooksFunction() };
-                foreach(var  migrator in migratorList)
-                {
-                    migrator.Migrate();
-                }
-                // Применяем все ожидающие миграции
+                IMigrator migrator = new AddSearchAndFilterFunction_books();
+                migrator.Migrate();
                 dbContext.Database.GetMigrations();
             }
             catch (System.Exception ex)

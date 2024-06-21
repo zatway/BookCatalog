@@ -10,8 +10,15 @@ using System.Windows.Media.Imaging;
 
 namespace BookCatalog.Service
 {
+    /// <summary>
+    /// Сервис для управления основными функциями базы данных
+    /// </summary>
     public static class DataService
     {
+        /// <summary>
+        /// Получение все таблицы
+        /// </summary>
+        /// <typeparam name="T">Тип модели, таблицу которой требуется получить</typeparam>
         public static ObservableCollection<T> GetFullTable<T>() where T : class
         {
             using (var dbContext = new MyDbContext())
@@ -20,6 +27,10 @@ namespace BookCatalog.Service
             }
         }
 
+        /// <summary>
+        /// Получение изображения из массива байтов
+        /// </summary>
+        /// <param name="coverImageInBytes">массив байтов</param>
         public static BitmapImage GetCover(byte[] coverImageInBytes)
         {
             try
@@ -39,81 +50,40 @@ namespace BookCatalog.Service
             }
         }
 
-
-        public static ObservableCollection<Book> StartSearch(string searchQuery, int pageNumber, int pageSize)
+        /// <summary>
+        /// Сортировка, поиск книг и управление страницами через функцию в базе данных
+        /// </summary>
+        /// <param name="searchQuery">строка поиска</param>
+        /// <param name="selectedFilterComboBoxItem">элемент комбобокса в котором хранится название фильтра</param>
+        /// <param name="pageNumber">номер страницы</param>
+        /// <param name="pageSize">количество строк, помещенных на одной странице</param>
+        public static ObservableCollection<Book> SearchAndFilter(string searchQuery, ComboBoxItem selectedFilterComboBoxItem, int pageNumber, int pageSize)
         {
-            if (searchQuery != null)
-            {
-                using (var dbContext = new MyDbContext())
-                {
-                    return new ObservableCollection<Book>(dbContext.Books
-                        .FromSqlRaw(@"
-                    SELECT * FROM search_books(@searchQuery, @pageNumber, @pageSize)",
-                            new NpgsqlParameter("@searchQuery", $"%{searchQuery}%"),
-                            new NpgsqlParameter("@pageNumber", pageNumber),
-                            new NpgsqlParameter("@pageSize", pageSize))
-                        .Select(b => new Book
-                        {
-                            Id = b.Id,
-                            Title = b.Title,
-                            Author = b.Author,
-                            YearOfManufacture = b.YearOfManufacture,
-                            ISBN = b.ISBN,
-                            Genre = b.Genre
-                        }).ToList()
-                        );
-                }
-            }
-            return null;
-        }
+            string selectedFilter = selectedFilterComboBoxItem?.Content?.ToString();
 
-        public static ObservableCollection<Book> ApplyFilter(ComboBoxItem selectedFilter, int pageNumber, int pageSize)
-        {
-            if (selectedFilter != null)
-            {
-                using (var dbContext = new MyDbContext())
-                {
-                    string selectedFilterContent = selectedFilter?.Content.ToString();
-                    return new ObservableCollection<Book>(dbContext.Books
-                        .FromSqlRaw("SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
-                            new NpgsqlParameter("@selectedFilter", selectedFilterContent),
-                            new NpgsqlParameter("@pageNumber", pageNumber),
-                            new NpgsqlParameter("@pageSize", pageSize))
-                        .Select(b => new Book
-                        {
-                            Id = b.Id,
-                            Title = b.Title,
-                            Author = b.Author,
-                            YearOfManufacture = b.YearOfManufacture,
-                            ISBN = b.ISBN,
-                            Genre = b.Genre
-                        }).ToList()
-                        );
-                }
-            }
-            return null;
-        }
-
-        public static ObservableCollection<Book> PagenatedOutput(int pageNumber, int pageSize)
-        {
             using (var dbContext = new MyDbContext())
             {
-                IQueryable<Book> query = dbContext.Books;
-                int skip = (pageNumber - 1) * pageSize;
-                query = query.Skip(skip).Take(pageSize);
-
-                return new ObservableCollection<Book>(query.Select(b => new Book
+                var books = dbContext.Books.FromSqlInterpolated($@"
+            SELECT * FROM public.filter_books(
+                {searchQuery},
+                {selectedFilter},
+                {pageNumber},
+                {pageSize}
+            )
+        ").ToList();
+                foreach(Book book in books)
                 {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Author = b.Author,
-                    YearOfManufacture = b.YearOfManufacture,
-                    ISBN = b.ISBN,
-                    Genre = b.Genre
-                }).ToList()
-            );
+                    book.Author = dbContext.Authors.FirstOrDefault(a => a.Id == book.AuthorId);
+                    book.Genre = dbContext.Genres.FirstOrDefault(a => a.Id == book.GenreId);
+                }
+                return new ObservableCollection<Book>(books);
             }
         }
+
+        /// <summary>
+        /// Удаление книги из базы данных
+        /// </summary>
+        /// <param name="selectBook">Выбранная книга</param>
         public static void RemoveBookForDB(Book selectBook)
         {
             using (var dbContext = new MyDbContext())

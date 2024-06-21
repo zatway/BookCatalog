@@ -6,16 +6,24 @@ namespace BookCatalog.Service
 {
     public class MyDbContext : DbContext
     {
+        //Таблицы в бд
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<CoverImage> CoverImages { get; set; }
 
+       /// <summary>
+       /// Подключение к БД
+       /// </summary>
+       /// <param name="optionsBuilder">строка подключения</param>       
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=BookCatalogDB;Username=postgres;Password=123;");
         }
 
+        /// <summary>
+        /// Проверка подключения к БД
+        /// </summary>
         public bool TestConnection()
         {
             try
@@ -29,6 +37,9 @@ namespace BookCatalog.Service
             }
         }
 
+        /// <summary>
+        /// Создание таблиц в БД
+        /// </summary>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Book>(entity =>

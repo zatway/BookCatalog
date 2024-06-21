@@ -17,15 +17,23 @@ using System.IO;
 
 namespace BookCatalog.ViewModels
 {
+    /// <summary>
+    /// Добавление новой книги
+    /// </summary>
     internal class AddNewBookViewModel : INotifyPropertyChanged
     {
+        /// <summary>
+        /// Конструктор класса AddNewBookViewModel
+        /// </summary>
         public AddNewBookViewModel()
         {
             LoadAuthors();
             LoadGenres();
         }
-
         private ICommand _selectFileCommand;
+        /// <summary>
+        /// Команда для выбора фотографии обложки книги
+        /// </summary>
         public ICommand SelectFileCommand
         {
             get
@@ -39,6 +47,9 @@ namespace BookCatalog.ViewModels
         }
 
         private ICommand _addBookCommand;
+        /// <summary>
+        /// Команда для добавления книги
+        /// </summary>
         public ICommand AddBookCommand
         {
             get
@@ -51,7 +62,77 @@ namespace BookCatalog.ViewModels
             }
         }
 
+        /// <summary>
+        /// Команда для проверки нажатия на кнопку "Автора нету в списке"
+        /// </summary>
+        private ICommand _authorCheckBoxCommand;
+        public ICommand AuthorCheckBoxCommand
+        {
+            get
+            {
+                if (_authorCheckBoxCommand == null)
+                {
+                    _authorCheckBoxCommand = new RelayCommand(param => ExecuteAuthorCheckBoxCommand());
+                }
+                return _authorCheckBoxCommand;
+            }
+        }
+
+        /// <summary>
+        /// Команда для проверки нажатия на кнопку "Жанра нету в списке"
+        /// </summary>
+        private ICommand _genreCheckBoxCommand;
+        public ICommand GenreCheckBoxCommand
+        {
+            get
+            {
+                if (_genreCheckBoxCommand == null)
+                {
+                    _genreCheckBoxCommand = new RelayCommand(param => ExecuteGenreCheckBoxCommand());
+                }
+                return _genreCheckBoxCommand;
+            }
+        }
+
+        private bool _isAuthorNotInListChecked;
+        public bool IsAuthorNotInListChecked
+        {
+            get => _isAuthorNotInListChecked;
+            set
+            {
+                if (_isAuthorNotInListChecked != value)
+                {
+                    _isAuthorNotInListChecked = value;
+                    OnPropertyChanged(nameof(IsAuthorNotInListChecked));
+                    if (_isAuthorNotInListChecked)
+                    {
+                        AuthorCheckBoxCommand.Execute(null);
+                    }
+                }
+            }
+        }
+
+        private bool _isGenreNotInListChecked;
+        public bool IsGenreNotInListChecked
+        {
+            get => _isGenreNotInListChecked;
+            set
+            {
+                if (_isGenreNotInListChecked != value)
+                {
+                    _isGenreNotInListChecked = value;
+                    OnPropertyChanged(nameof(IsGenreNotInListChecked));
+                    if (_isGenreNotInListChecked)
+                    {
+                        GenreCheckBoxCommand.Execute(null);
+                    }
+                }
+            }
+        }
         private ObservableCollection<Genre> _genres;
+        /// <summary>
+        /// Список который хранит список жанров
+        /// </summary>
         public ObservableCollection<Genre> Genres
         {
             get => _genres;
@@ -66,6 +147,9 @@ namespace BookCatalog.ViewModels
         }
 
         private ObservableCollection<Author> _authors;
+        /// <summary>
+        /// Список который хранит список авторов
+        /// </summary>
         public ObservableCollection<Author> Authors
         {
             get { return _authors; }
@@ -195,6 +279,9 @@ namespace BookCatalog.ViewModels
 
         private void LoadAuthors() => Authors = DataService.GetFullTable<Author>();
 
+        /// <summary>
+        /// Добавление новой книги
+        /// </summary>
         private void AddNewBook()
         {
             if (!ValidateInputs())
@@ -248,7 +335,7 @@ namespace BookCatalog.ViewModels
                         dbContext.Books.Add(newBook);
                         dbContext.SaveChanges();
 
-                        MessageBox.Show("Изменения успешно сохранены");
+                        MessageBox.Show("Книга успешно сохранена");
                         CloseWindow();
                     }
                 }
@@ -264,7 +351,9 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
-
+        /// <summary>
+        /// Валидация для добавления ккниги
+        /// </summary>
         private bool ValidateInputs()
         {
             return !string.IsNullOrWhiteSpace(Title) &&
@@ -274,6 +363,9 @@ namespace BookCatalog.ViewModels
                    Genre != null && CoverImageBitmap != null;
         }
 
+        /// <summary>
+        /// Обработчик добавления фотографии обложки книги
+        /// </summary>
         private void SelectFileCommandExecute()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
@@ -289,70 +381,14 @@ namespace BookCatalog.ViewModels
                 CoverImageBitmap = new BitmapImage(new Uri(selectedImagePath));
             }
         }
-
+        /// <summary>
+        /// Свойство для отслеживания открытых окон
+        /// </summary>
         public Action CloseWindow { get; set; }
-        private bool _isAuthorNotInListChecked;
-        public bool IsAuthorNotInListChecked
-        {
-            get => _isAuthorNotInListChecked;
-            set
-            {
-                if (_isAuthorNotInListChecked != value)
-                {
-                    _isAuthorNotInListChecked = value;
-                    OnPropertyChanged(nameof(IsAuthorNotInListChecked));
-                    if (_isAuthorNotInListChecked)
-                    {
-                        AuthorCheckBoxCommand.Execute(null);
-                    }
-                }
-            }
-        }
 
-        private bool _isGenreNotInListChecked;
-        public bool IsGenreNotInListChecked
-        {
-            get => _isGenreNotInListChecked;
-            set
-            {
-                if (_isGenreNotInListChecked != value)
-                {
-                    _isGenreNotInListChecked = value;
-                    OnPropertyChanged(nameof(IsGenreNotInListChecked));
-                    if (_isGenreNotInListChecked)
-                    {
-                        GenreCheckBoxCommand.Execute(null);
-                    }
-                }
-            }
-        }
-        private ICommand _authorCheckBoxCommand;
-        public ICommand AuthorCheckBoxCommand
-        {
-            get
-            {
-                if (_authorCheckBoxCommand == null)
-                {
-                    _authorCheckBoxCommand = new RelayCommand(param => ExecuteAuthorCheckBoxCommand());
-                }
-                return _authorCheckBoxCommand;
-            }
-        }
-
-
-        private ICommand _genreCheckBoxCommand;
-        public ICommand GenreCheckBoxCommand
-        {
-            get
-            {
-                if (_genreCheckBoxCommand == null)
-                {
-                    _genreCheckBoxCommand = new RelayCommand(param => ExecuteGenreCheckBoxCommand());
-                }
-                return _genreCheckBoxCommand;
-            }
-        }
-
+        /// <summary>
+        /// Обработчикк событий, который открывает окно добавления автора
+        /// </summary>
         private void ExecuteAuthorCheckBoxCommand()
         {
             if (IsAuthorNotInListChecked)
@@ -363,6 +399,9 @@ namespace BookCatalog.ViewModels
             IsAuthorNotInListChecked = false;
         }
 
+        /// <summary>
+        /// Обработчикк событий, который открывает окно добавления жанра
+        /// </summary>
         private void ExecuteGenreCheckBoxCommand()
         {
             if (IsGenreNotInListChecked)
