@@ -11,16 +11,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using BookCatalog.ViewModels;
 
 namespace BookCatalog.Views
 {
     /// <summary>
-    /// Логика взаимодействия для EditBookWindow.xaml
+    /// Логика взаимодействия для AddNewBookWindow.xaml
     /// </summary>
-    public partial class EditBookWindow : Window
+    public partial class AddNewBookWindow : Window
     {
-        public EditBookWindow()
+        public AddNewBookWindow()
         {
             InitializeComponent();
         }

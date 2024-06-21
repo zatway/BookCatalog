@@ -18,7 +18,6 @@ namespace BookCatalog.ViewModels
     {
         public BookCatalogViewModel()
         {
-            DataService.CreateDBOrExistsCheck();
             _pageNumber = 1;
             PageSize = 5;
             BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
@@ -33,7 +32,7 @@ namespace BookCatalog.ViewModels
                 {
                     _openCardBookCommand = new RelayCommand(o =>
                     {
-                        WindowControlService.OpenCardBooks(SelectedBook);
+                        WindowControlService.OpenWindowCardBook(SelectedBook);
                         UpdateBookList();
                     });
                 }
@@ -67,7 +66,10 @@ namespace BookCatalog.ViewModels
                 {
                     _removeBookCommand = new RelayCommand(o =>
                     {
-                        DataService.RemoveBookForDB(SelectedBook);
+                        if (SelectedBook != null)
+                            DataService.RemoveBookForDB(SelectedBook);
+                        else
+                            MessageBox.Show("Книга не выбрана");
                         UpdateBookList();
                     });
                 }
@@ -110,7 +112,7 @@ namespace BookCatalog.ViewModels
                 {
                     _startSearchCommand = new RelayCommand(o =>
                     {
-                        BooksList = DataService.StartSearch(SearchQuery, PageNumber, PageSize);
+                        //BooksList = DataService.StartSearch(SearchQuery, PageNumber, PageSize);
                     });
                 }
                 return _startSearchCommand;
@@ -141,7 +143,7 @@ namespace BookCatalog.ViewModels
                 {
                     _selectedFilter = value;
                     OnPropertyChanged(nameof(SelectedFilter));
-                    BooksList = DataService.ApplyFilter(SelectedFilter, PageNumber, PageSize);
+                    //BooksList = DataService.ApplyFilter(SelectedFilter, PageNumber, PageSize);
                 }
             }
         }
@@ -183,7 +185,7 @@ namespace BookCatalog.ViewModels
                 {
                     _pageNumber = value;
                     OnPropertyChanged(nameof(PageNumber));
-                    BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
+                    //BooksList = DataService.PagenatedOutput(PageNumber, PageSize);
                 }
             }
         }

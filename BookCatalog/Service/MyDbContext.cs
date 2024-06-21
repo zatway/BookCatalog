@@ -24,7 +24,6 @@ namespace BookCatalog.Service
             }
             catch (Exception ex)
             {
-                // Логирование ошибки (если необходимо)
                 Console.WriteLine("Ошибка подключения к базе данных: " + ex.Message);
                 return false;
             }
@@ -37,18 +36,9 @@ namespace BookCatalog.Service
                 entity.ToTable("books");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.ISBN).HasMaxLength(13);
+                entity.Property(e => e.ISBN).HasMaxLength(25);
                 entity.Property(e => e.YearOfManufacture).IsRequired();
                 entity.Property(e => e.Description).HasMaxLength(1000);
-                entity.HasOne(e => e.Author)
-                      .WithMany(a => a.Books)
-                      .HasForeignKey(e => e.AuthorId);
-                entity.HasOne(e => e.Genre)
-                      .WithMany(g => g.Books)
-                      .HasForeignKey(e => e.GenreId);
-                entity.HasOne(e => e.CoverImage)
-                      .WithMany(c => c.Books)
-                      .HasForeignKey(e => e.CoverImageId);
             });
 
             modelBuilder.Entity<Author>(entity =>
@@ -71,6 +61,21 @@ namespace BookCatalog.Service
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.ImageData).IsRequired();
             });
+
+            modelBuilder.Entity<Book>()
+                .HasOne(e => e.Author)
+                .WithMany(a => a.Books)
+                .HasForeignKey(e => e.AuthorId);
+
+            modelBuilder.Entity<Book>()
+                .HasOne(e => e.Genre)
+                .WithMany(g => g.Books)
+                .HasForeignKey(e => e.GenreId);
+
+            modelBuilder.Entity<Book>()
+                .HasOne(e => e.CoverImage)
+                .WithMany(c => c.Books)
+                .HasForeignKey(e => e.CoverImageId);
         }
     }
 }

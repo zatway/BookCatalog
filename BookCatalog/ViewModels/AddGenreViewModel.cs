@@ -12,14 +12,8 @@ using System.Windows.Input;
 
 namespace BookCatalog.ViewModels
 {
-    internal class AddGenreViewModel
+    internal class AddGenreViewModel : INotifyPropertyChanged
     {
-        private readonly Window _parrentWindow;
-        public AddGenreViewModel(Window parrentWindow)
-        {
-            _parrentWindow = parrentWindow;
-        }
-
         private string _name;
         public string Name
         {
@@ -29,7 +23,7 @@ namespace BookCatalog.ViewModels
                 if (_name != value)
                 {
                     _name = value;
-                    OnPropertyChanged(nameof(_name));
+                    OnPropertyChanged(nameof(Name));
                 }
             }
         }
@@ -45,33 +39,44 @@ namespace BookCatalog.ViewModels
                 }
                 return _saveCommand;
             }
-        }
+        }   
+
+        public Action CloseWindow { get; set; }
         public void SaveExecute()
         {
             if (Validation())
             {
-                Genre newGenre = new Genre()
-                {
-                    Name = Name,
-                };
                 using (var dbContext = new MyDbContext())
                 {
+                    bool genreExists = dbContext.Genres.Any(a => a.Name == this.Name);
+                    if (genreExists)
+                    {
+                        MessageBox.Show("Такой автор уже добавлен");
+                        return;
+                    }
+                    Genre newGenre = new Genre()
+                    {
+                        Name = Name,
+                    };
                     dbContext.Genres.Add(newGenre);
                     dbContext.SaveChanges();
                 }
-                _parrentWindow.Close();
+                CloseWindow();
             }
             else
-                MessageBox.Show("Поле заполнено некорректно");
+            {
+                MessageBox.Show("Поле заполнено некорректно", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         bool Validation() => !string.IsNullOrWhiteSpace(Name);
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        
     }
 }

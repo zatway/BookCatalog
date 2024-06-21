@@ -1,23 +1,21 @@
 ﻿using BookCatalog.ViewModels;
 using BookCatalog.Views;
 using BookCatalog.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace BookCatalog.Service
 {
     public static class WindowControlService
     {
-        public static void OpenCardBooks(Book SelectedBook)
+        public static void OpenWindowCardBook(Book SelectBook)
         {
-            if (SelectedBook != null)
+            if (SelectBook != null)
             {
-                var viewModel = new EditBookViewModel(SelectedBook);
-                var window = new EditBookWindow();
+                var viewModel = new OpenAndEditCardBookViewModel(SelectBook);
+                var window = new OpenAndEditCardBookWindow()
+                {
+                    DataContext = viewModel,
+                };
                 window.DataContext = viewModel;
                 window.ShowDialog();
             }
@@ -29,31 +27,34 @@ namespace BookCatalog.Service
 
         public static void OpenWindowAddBook()
         {
-            var viewModel = new EditBookViewModel();
-            var window = new EditBookWindow();
-            window.DataContext = viewModel;
+            var viewModel = new AddNewBookViewModel();
+            var window = new AddNewBookWindow()
+            {
+                DataContext = viewModel,
+            };
+            viewModel.CloseWindow = window.Close;
             window.ShowDialog();
         }
 
-        public static void OpenWindowAddGenre(Window windowSource)
+        public static void OpenWindowAddGenre()
         {
-            var viewModel = new AddAutorsViewModel(windowSource);
-            var window = new AddAuthorsWindow
+            var viewModel = new AddGenreViewModel();
+            var window = new AddGenreWindow
             {
                 DataContext = viewModel,
-                Owner = windowSource
             };
+            viewModel.CloseWindow = window.Close;
             window.ShowDialog();
         }
 
-        public static void OpenWindowAddAuthor(Window windowSource)
+        public static void OpenWindowAddAuthor()
         {
-            var viewModel = new AddAutorsViewModel(windowSource);
+            var viewModel = new AddAutorsViewModel();
             var window = new AddAuthorsWindow
             {
                 DataContext = viewModel,
-                Owner = windowSource
             };
+            viewModel.CloseWindow = window.Close;
             window.ShowDialog();
         }
     }

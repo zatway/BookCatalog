@@ -15,12 +15,6 @@ namespace BookCatalog.ViewModels
 {
     public class AddAutorsViewModel : INotifyPropertyChanged
     {
-        private readonly Window _parrentWindow;
-        public AddAutorsViewModel(Window parrentWindow)
-        {
-            _parrentWindow = parrentWindow;
-        }
-
         private string _name;
         public string Name
         {
@@ -30,7 +24,7 @@ namespace BookCatalog.ViewModels
                 if (_name != value)
                 {
                     _name = value;
-                    OnPropertyChanged(nameof(_name));
+                    OnPropertyChanged(nameof(Name));
                 }
             }
         }
@@ -44,7 +38,7 @@ namespace BookCatalog.ViewModels
                 if (_surname != value)
                 {
                     _surname = value;
-                    OnPropertyChanged(nameof(_surname));
+                    OnPropertyChanged(nameof(Surname));
                 }
             }
         }
@@ -58,16 +52,15 @@ namespace BookCatalog.ViewModels
                 if (_patronymic != value)
                 {
                     _patronymic = value;
-                    OnPropertyChanged(nameof(_patronymic));
+                    OnPropertyChanged(nameof(Patronymic));
                 }
             }
         }
+ 
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        public Action CloseWindow { get; set; }
+
+
         private ICommand _saveCommand;
         public ICommand SaveCommand
         {
@@ -81,24 +74,36 @@ namespace BookCatalog.ViewModels
             }
         }
 
-            public void SaveExecute()
+        public void SaveExecute()
+        {
+            if (Validation())
             {
-                if(Validation())
+                string fullName = $"{Name} {Patronymic} {Surname}";
+                using (var dbContext = new MyDbContext())
                 {
-                    string fullName = $"{Name} {Patronymic} {Surname}";
+                    bool authorExists = dbContext.Authors.Any(a => a.FullName == fullName);
+                    if (authorExists)
+                    {
+                        MessageBox.Show("Такой автор уже добавлен");
+                        return;
+                    }
+
                     Author newAuthor = new Author()
                     {
                         FullName = fullName,
                     };
-                    using (var dbContext = new MyDbContext())
-                    {
-                        dbContext.Authors.Add(newAuthor);
-                        dbContext.SaveChanges();
-                    }
-                    _parrentWindow.Close();
+                    dbContext.Authors.Add(newAuthor);
+                    dbContext.SaveChanges();
                 }
+                CloseWindow();
             }
-
+        }
         bool Validation() => !string.IsNullOrWhiteSpace(Name) && !string.IsNullOrWhiteSpace(Surname) && !string.IsNullOrWhiteSpace(Patronymic);
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
     }
 }

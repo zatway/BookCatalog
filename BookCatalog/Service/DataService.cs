@@ -12,16 +12,6 @@ namespace BookCatalog.Service
 {
     public static class DataService
     {
-        public static void CreateDBOrExistsCheck()
-        {
-            using (var dbContext = new MyDbContext())
-            {
-                if (!dbContext.Database.GetService<IRelationalDatabaseCreator>().Exists())//проверка на существование бд
-                    dbContext.Database.EnsureCreated();//создание бд
-                dbContext.Database.Migrate();
-            }
-        }
-
         public static ObservableCollection<T> GetFullTable<T>() where T : class
         {
             using (var dbContext = new MyDbContext())
@@ -84,26 +74,21 @@ namespace BookCatalog.Service
                 using (var dbContext = new MyDbContext())
                 {
                     string selectedFilterContent = selectedFilter?.Content.ToString();
-                    if (selectedFilter != null)
-                    {
-                        return new ObservableCollection<Book>(
-                        dbContext.Books
-                            .FromSqlRaw(@"
-                            SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
-                                new NpgsqlParameter("@selectedFilter", selectedFilterContent),
-                                new NpgsqlParameter("@pageNumber", pageNumber),
-                                new NpgsqlParameter("@pageSize", pageSize))
-                            .Select(b => new Book
-                            {
-                                Id = b.Id,
-                                Title = b.Title,
-                                Author = b.Author,
-                                YearOfManufacture = b.YearOfManufacture,
-                                ISBN = b.ISBN,
-                                Genre = b.Genre
-                            }).ToList()
-                    );
-                    }
+                    return new ObservableCollection<Book>(dbContext.Books
+                        .FromSqlRaw("SELECT * FROM filter_books(@selectedFilter, @pageNumber, @pageSize)",
+                            new NpgsqlParameter("@selectedFilter", selectedFilterContent),
+                            new NpgsqlParameter("@pageNumber", pageNumber),
+                            new NpgsqlParameter("@pageSize", pageSize))
+                        .Select(b => new Book
+                        {
+                            Id = b.Id,
+                            Title = b.Title,
+                            Author = b.Author,
+                            YearOfManufacture = b.YearOfManufacture,
+                            ISBN = b.ISBN,
+                            Genre = b.Genre
+                        }).ToList()
+                        );
                 }
             }
             return null;

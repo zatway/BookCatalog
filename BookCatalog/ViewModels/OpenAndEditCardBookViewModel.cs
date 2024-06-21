@@ -13,22 +13,15 @@ using Microsoft.Win32;
 
 namespace BookCatalog.ViewModels
 {
-    public class EditBookViewModel : INotifyPropertyChanged
+    public class OpenAndEditCardBookViewModel : INotifyPropertyChanged
     {
         private Book _book;
 
-        public EditBookViewModel(Book book)
-        {
-            _book = book;
-            LoadBook();
-            LoadAuthors();
-            LoadGenres();
-        }
-
-        public EditBookViewModel()
+        public OpenAndEditCardBookViewModel(Book book)
         {
             LoadAuthors();
             LoadGenres();
+            LoadBook(book);
         }
 
         private ICommand _selectFileCommand;
@@ -79,7 +72,7 @@ namespace BookCatalog.ViewModels
             {
                 if (value != _authors)
                 {
-                    _authors = DataService.GetFullTable<Author>();
+                    _authors = value;
                     OnPropertyChanged(nameof(Authors));
                 }
             }
@@ -155,16 +148,16 @@ namespace BookCatalog.ViewModels
             }
         }
 
-        private CoverImage _coverImage;
-        public CoverImage CoverImage
+        private byte[] _coverImageByte;
+        public byte[] CoverImageByte
         {
-            get => _coverImage;
+            get => _coverImageByte;
             set
             {
-                if (_coverImage != value)
+                if (_coverImageByte != value)
                 {
-                    _coverImage = value;
-                    OnPropertyChanged(nameof(CoverImage));
+                    _coverImageByte = value;
+                    OnPropertyChanged(nameof(CoverImageByte));
                 }
             }
         }
@@ -175,9 +168,9 @@ namespace BookCatalog.ViewModels
             get => _coverImageInBytes;
             set
             {
-                if (_coverImageInBytes == null || _coverImageInBytes != value)
+                if (_coverImageInBytes != value)
                 {
-                    _coverImageInBytes = DataService.GetCover(_coverImage.ImageData);
+                    _coverImageInBytes = value;
                     OnPropertyChanged(nameof(CoverImageBitmap));
                 }
             }
@@ -197,15 +190,52 @@ namespace BookCatalog.ViewModels
             }
         }
 
-        private void LoadBook()
+        private void LoadBook(Book book)
         {
+            using (var dbContext = new MyDbContext())
+            {
+                // Выполните запрос для поиска книги в базе данных и загрузки связанных данных
+                _book = dbContext.Books
+                    .Include(b => b.Author)
+                    .Include(b => b.CoverImage)
+                    .Include(b => b.Genre)
+                    .SingleOrDefault(b => b.Title == book.Title
+                                       && b.ISBN == book.ISBN
+                                       && b.AuthorId == book.Author.Id);
+
+                // Проверяем, найдена ли книга
+                if (_book != null)
+                {
+                    // Дополнительные действия с найденной книгой
+                }
+                else
+                {
+                    MessageBox.Show("Книга не найдена в базе данных.");
+                }
+            }
             Title = _book.Title;
             YearOfManufacture = _book.YearOfManufacture;
             ISBN = _book.ISBN;
             Description = _book.Description;
-            Author = _book.Author;
-            Genre = _book.Genre;
-            CoverImage = _book.CoverImage;
+            Author = Authors.FirstOrDefault(a => a.Id == _book.AuthorId);
+            Genre = Genres.FirstOrDefault(g => g.Id == _book.GenreId);
+            CoverImageByte  = _book.CoverImage.ImageData;
+            CoverImageBitmap = DataService.GetCover(_book.CoverImage.ImageData);
+            CoverImageByte = _book.CoverImage.ImageData;
+
+            // Уведомляем интерфейс об изменении свойств
+            OnPropertyChanged(nameof(Title));
+            OnPropertyChanged(nameof(YearOfManufacture));
+            OnPropertyChanged(nameof(ISBN));
+            OnPropertyChanged(nameof(Description));
+            OnPropertyChanged(nameof(Author));
+            OnPropertyChanged(nameof(Genre));
+            OnPropertyChanged(nameof(CoverImageByte));
+            OnPropertyChanged(nameof(CoverImageBitmap));
+
+            // Уведомляем интерфейс об изменении коллекций Authors и Genres
+            OnPropertyChanged(nameof(Authors));
+            OnPropertyChanged(nameof(Genres));
         }
 
         private void LoadGenres()
@@ -225,7 +255,6 @@ namespace BookCatalog.ViewModels
                 MessageBox.Show("Не все поля заполнены");
                 return;
             }
-
             try
             {
                 using (var dbContext = new MyDbContext())
@@ -234,7 +263,7 @@ namespace BookCatalog.ViewModels
                     _book.YearOfManufacture = YearOfManufacture.ToUniversalTime();
                     _book.ISBN = ISBN;
                     _book.Author = Author;
-                    _book.CoverImage = CoverImage;
+                    _book.CoverImage.ImageData = CoverImageByte;
                     dbContext.Entry(_book).State = EntityState.Modified;
                     dbContext.SaveChanges();
                 }
@@ -265,10 +294,12 @@ namespace BookCatalog.ViewModels
             if (openFileDialog.ShowDialog() == true)
             {
                 string selectedImagePath = openFileDialog.FileName;
-                CoverImage.ImageData = File.ReadAllBytes(selectedImagePath);
-                CoverImageBitmap = new BitmapImage(new Uri(selectedImagePath)); 
+
+                CoverImageByte = File.ReadAllBytes(selectedImagePath);
+                CoverImageBitmap = new BitmapImage(new Uri(selectedImagePath));
             }
         }
+
         private bool _isAuthorNotInListChecked;
         public bool IsAuthorNotInListChecked
         {
@@ -285,29 +316,6 @@ namespace BookCatalog.ViewModels
                     }
                 }
             }
-        }
-
-        private ICommand _authorCheckBoxCommand;
-        public ICommand AuthorCheckBoxCommand
-        {
-            get
-            {
-                if (_authorCheckBoxCommand == null)
-                {
-                    _authorCheckBoxCommand = new RelayCommand(param => ExecuteAuthorCheckBoxCommand());
-                }
-                return _authorCheckBoxCommand;
-            }
-        }
-
-        private void ExecuteAuthorCheckBoxCommand()
-        {
-            if (IsAuthorNotInListChecked)
-            {
-                WindowControlService.OpenWindowAddAuthor(Application.Current.MainWindow);
-                LoadAuthors();
-            }
-            IsAuthorNotInListChecked = false;
         }
 
         private bool _isGenreNotInListChecked;
@@ -327,6 +335,19 @@ namespace BookCatalog.ViewModels
                 }
             }
         }
+        private ICommand _authorCheckBoxCommand;
+        public ICommand AuthorCheckBoxCommand
+        {
+            get
+            {
+                if (_authorCheckBoxCommand == null)
+                {
+                    _authorCheckBoxCommand = new RelayCommand(param => ExecuteAuthorCheckBoxCommand());
+                }
+                return _authorCheckBoxCommand;
+            }
+        }
+
 
         private ICommand _genreCheckBoxCommand;
         public ICommand GenreCheckBoxCommand
@@ -337,15 +358,25 @@ namespace BookCatalog.ViewModels
                 {
                     _genreCheckBoxCommand = new RelayCommand(param => ExecuteGenreCheckBoxCommand());
                 }
-                return _authorCheckBoxCommand;
+                return _genreCheckBoxCommand;
             }
+        }
+
+        private void ExecuteAuthorCheckBoxCommand()
+        {
+            if (IsAuthorNotInListChecked)
+            {
+                WindowControlService.OpenWindowAddAuthor();
+                LoadAuthors();
+            }
+            IsAuthorNotInListChecked = false;
         }
 
         private void ExecuteGenreCheckBoxCommand()
         {
             if (IsGenreNotInListChecked)
             {
-                WindowControlService.OpenWindowAddGenre(Application.Current.MainWindow);
+                WindowControlService.OpenWindowAddGenre();
                 LoadGenres();
             }
             IsGenreNotInListChecked = false;
