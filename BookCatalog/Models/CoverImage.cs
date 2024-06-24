@@ -9,7 +9,7 @@ namespace BookCatalog.Models
     public class CoverImage
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Это указывает, что Id будет генерироваться базой данных
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // SERIAL ID
         public int Id { get; set; }
         public byte[] ImageData { get; set; }
         public ICollection<Book> Books { get; set; }
