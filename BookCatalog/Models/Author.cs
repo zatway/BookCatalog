@@ -11,7 +11,7 @@ namespace BookCatalog.Models
     public class Author
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Это указывает, что Id будет генерироваться базой данных
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // SERIAL ID
         public int Id { get; set; }
         public string FullName { get; set; }
         public ICollection<Book> Books { get; set; }
